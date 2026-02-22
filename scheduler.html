@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conference Scheduler V2.0 - Professional Edition</title>
+    <title>Conference Scheduler V2.0</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -28,42 +28,12 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header-left h1 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .sync-status {
-            padding: 6px 12px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 16px;
-            font-size: 14px;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-left h1 { font-size: 20px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .sync-status { padding: 6px 12px; background: rgba(255,255,255,0.2); border-radius: 16px; font-size: 14px; }
+        .user-menu { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid white; }
 
         .tab-nav {
             background: white;
@@ -86,28 +56,12 @@
             white-space: nowrap;
         }
 
-        .tab-btn:hover {
-            color: #667eea;
-        }
+        .tab-btn:hover { color: #667eea; }
+        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
 
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
+        .main-content { flex: 1; overflow-y: auto; padding: 24px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .toolbar {
             background: white;
@@ -120,7 +74,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .btn-primary, .btn-secondary, .btn-icon, .btn-small, .btn-large, .btn-danger {
+        .btn-primary, .btn-secondary, .btn-icon, .btn-small, .btn-danger {
             padding: 10px 20px;
             border: none;
             border-radius: 8px;
@@ -130,35 +84,14 @@
             transition: all 0.2s;
         }
 
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .btn-icon {
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-icon { padding: 8px 12px; background: rgba(255,255,255,0.2); color: white; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
 
         .search-input {
             flex: 1;
@@ -186,9 +119,9 @@
         .schedule-table th,
         .schedule-table td {
             border: 1px solid #e5e7eb;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .schedule-table th {
@@ -196,7 +129,9 @@
             font-weight: 600;
             color: #374151;
             text-align: center;
-            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .room-header {
@@ -221,6 +156,7 @@
             text-align: center;
             font-weight: 600;
             color: #92400e;
+            font-size: 16px;
         }
 
         .time-cell {
@@ -228,22 +164,23 @@
             background: #f9fafb;
             text-align: center;
             white-space: nowrap;
-            min-width: 80px;
+            min-width: 120px;
+            font-size: 14px;
         }
 
         .schedule-cell {
             min-height: 60px;
             position: relative;
-            min-width: 200px;
+            background: white;
+            transition: all 0.2s;
         }
 
         .schedule-cell.empty {
             cursor: pointer;
-            transition: background 0.2s;
         }
 
         .schedule-cell.empty:hover {
-            background: #f3f4f6;
+            background: #f9fafb;
         }
 
         .schedule-cell.drag-over {
@@ -251,53 +188,96 @@
             border: 2px dashed #3b82f6 !important;
         }
 
-        .lecture-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
+        .schedule-cell.conflict {
+            background: #fee2e2 !important;
+            border: 2px solid #ef4444 !important;
+        }
+
+        .lecture-content {
+            padding: 8px;
             cursor: move;
+            border-radius: 6px;
             transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .lecture-content:hover {
+            background: #f9fafb;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .lecture-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transform: translateY(-2px);
-        }
-
-        .lecture-card.dragging {
+        .lecture-content.dragging {
             opacity: 0.5;
         }
 
-        .lecture-card.sponsored {
-            border: 2px solid #fbbf24;
+        .lecture-content.conflict {
+            border-color: #ef4444 !important;
+            background: #fef2f2 !important;
         }
 
-        .lecture-card.non-sponsored {
-            border: 2px solid #f87171;
+        .lecture-content.warning {
+            border-color: #f59e0b !important;
+            background: #fffbeb !important;
         }
 
         .lecture-title {
-            font-weight: 600;
-            margin-bottom: 6px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .speaker-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .speaker-photo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .speaker-photo.placeholder {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .speaker-name {
             font-size: 13px;
-            line-height: 1.4;
+            color: #374151;
         }
 
-        .lecture-meta {
-            font-size: 11px;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-
-        .lecture-sponsor-badge {
+        .conflict-badge {
             display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            margin-top: 4px;
+            background: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .warning-badge {
+            display: inline-block;
+            background: #f59e0b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
         }
 
         .items-grid {
@@ -323,30 +303,21 @@
             gap: 16px;
         }
 
-        .speaker-photo {
+        .speaker-card .speaker-photo {
             width: 80px;
             height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
             border: 3px solid #e5e7eb;
-            flex-shrink: 0;
         }
 
-        .speaker-photo.placeholder {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+        .speaker-card .speaker-photo.placeholder {
             font-size: 32px;
-            font-weight: bold;
         }
 
-        .speaker-info {
+        .speaker-info-detail {
             flex: 1;
         }
 
-        .speaker-name {
+        .speaker-name-large {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 4px;
@@ -391,9 +362,7 @@
             padding: 20px;
         }
 
-        .modal.active {
-            display: flex;
-        }
+        .modal.active { display: flex; }
 
         .modal-content {
             background: white;
@@ -413,10 +382,7 @@
             align-items: center;
         }
 
-        .modal-header h3 {
-            font-size: 18px;
-            color: #111827;
-        }
+        .modal-header h3 { font-size: 18px; color: #111827; }
 
         .close-btn {
             background: none;
@@ -433,14 +399,9 @@
             border-radius: 6px;
         }
 
-        .close-btn:hover {
-            background: #f3f4f6;
-        }
+        .close-btn:hover { background: #f3f4f6; }
 
-        .modal-body {
-            padding: 24px;
-        }
-
+        .modal-body { padding: 24px; }
         .modal-footer {
             padding: 16px 24px;
             border-top: 1px solid #e5e7eb;
@@ -449,10 +410,7 @@
             gap: 12px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -496,7 +454,6 @@
             margin: 0 auto;
             border-radius: 8px;
             overflow: hidden;
-            position: relative;
         }
 
         .photo-preview img {
@@ -535,14 +492,8 @@
         .toast.info { border-left: 4px solid #3b82f6; }
 
         @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .empty-message {
@@ -571,6 +522,13 @@
             background: #f9fafb;
         }
 
+        .lecture-selector-item.conflict {
+            border-color: #ef4444;
+            background: #fef2f2;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .settings-section {
             background: white;
             padding: 24px;
@@ -597,22 +555,60 @@
             margin-bottom: 8px;
         }
 
-        .room-name {
-            flex: 1;
-            font-weight: 500;
+        .room-name { flex: 1; font-weight: 500; }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
         }
 
-        .empty-slot {
-            color: #9ca3af;
-            font-size: 20px;
-            text-align: center;
-            padding: 20px;
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-label:hover {
+            background: #f9fafb;
+            border-color: #667eea;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .conflict-list {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .conflict-item {
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .conflict-item:last-child {
+            margin-bottom: 0;
         }
 
         @media (max-width: 768px) {
-            .items-grid {
-                grid-template-columns: 1fr;
-            }
+            .items-grid { grid-template-columns: 1fr; }
+            .checkbox-group { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -648,7 +644,13 @@
                 <div class="toolbar">
                     <button onclick="addBreak()" class="btn-primary">☕ Break 추가</button>
                     <button onclick="addSessionHeader()" class="btn-primary">📋 세션 추가</button>
+                    <button onclick="checkAllConflicts()" class="btn-secondary">🔍 중복 검사</button>
                     <button onclick="refreshSchedule()" class="btn-secondary">🔄 새로고침</button>
+                </div>
+                
+                <div id="conflictAlert" class="conflict-list" style="display: none;">
+                    <h4 style="margin-bottom: 12px; color: #dc2626;">⚠️ 연자 중복 발견</h4>
+                    <div id="conflictItems"></div>
                 </div>
                 
                 <div id="scheduleContainer" class="schedule-container">
@@ -705,7 +707,6 @@
                             <option value="15">15분</option>
                             <option value="20" selected>20분</option>
                             <option value="30">30분</option>
-                            <option value="60">60분</option>
                         </select>
                     </div>
                     <button onclick="generateTimeSlots()" class="btn-primary">⚡ 시간 슬롯 자동 생성</button>
@@ -717,6 +718,14 @@
                         <label>기본 발표 시간 (분)</label>
                         <input type="number" id="settingDefaultDuration" class="form-control" value="20" min="5" max="120">
                     </div>
+                    <div class="form-group">
+                        <label>이동 버퍼 시간 (분)</label>
+                        <input type="number" id="settingBufferTime" class="form-control" value="10" min="0" max="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Break 기본 제목</label>
+                        <input type="text" id="settingBreakTitle" class="form-control" value="Coffee Break">
+                    </div>
                 </div>
             </div>
 
@@ -724,13 +733,44 @@
                 <div style="max-width: 600px; margin: 0 auto;">
                     <div class="settings-section">
                         <h3>📤 내보내기</h3>
-                        <button onclick="exportToExcel()" class="btn-primary btn-large" style="width: 100%; margin-bottom: 12px;">
+                        
+                        <div class="form-group">
+                            <label>출력할 컬럼 선택</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportTime" checked disabled>
+                                    <span>Time (필수)</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportTitle" checked disabled>
+                                    <span>Title (필수)</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportSpeaker" checked disabled>
+                                    <span>Speaker (필수)</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportModerator" checked>
+                                    <span>Moderator</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportProduct" checked>
+                                    <span>Product</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="exportSponsor" checked>
+                                    <span>Sponsor</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button onclick="exportToExcel()" class="btn-primary" style="width: 100%; margin-bottom: 12px; padding: 16px; font-size: 16px;">
                             📊 Excel로 내보내기
                         </button>
-                        <button onclick="exportToPDF()" class="btn-primary btn-large" style="width: 100%; margin-bottom: 12px;">
+                        <button onclick="exportToPDF()" class="btn-primary" style="width: 100%; margin-bottom: 12px; padding: 16px; font-size: 16px;">
                             📄 PDF로 내보내기
                         </button>
-                        <button onclick="exportToJSON()" class="btn-secondary btn-large" style="width: 100%;">
+                        <button onclick="exportToJSON()" class="btn-secondary" style="width: 100%; padding: 16px; font-size: 16px;">
                             💾 JSON 백업
                         </button>
                     </div>
@@ -739,7 +779,7 @@
         </main>
     </div>
 
-    <!-- 연자 모달 -->
+    <!-- 모달들 -->
     <div id="speakerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -774,10 +814,6 @@
                     <label>이메일</label>
                     <input type="email" id="speakerEmail" class="form-control">
                 </div>
-                <div class="form-group">
-                    <label>전화번호</label>
-                    <input type="tel" id="speakerPhone" class="form-control">
-                </div>
             </div>
             <div class="modal-footer">
                 <button onclick="closeSpeakerModal()" class="btn-secondary">취소</button>
@@ -786,7 +822,6 @@
         </div>
     </div>
 
-    <!-- 강의 모달 -->
     <div id="lectureModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -813,11 +848,11 @@
                 </div>
                 <div class="form-group">
                     <label>스폰서 회사</label>
-                    <input type="text" id="lectureSponsor" class="form-control" placeholder="회사명">
+                    <input type="text" id="lectureSponsor" class="form-control">
                 </div>
                 <div class="form-group">
                     <label>제품명</label>
-                    <input type="text" id="lectureProduct" class="form-control" placeholder="제품/기기명">
+                    <input type="text" id="lectureProduct" class="form-control">
                 </div>
                 <div class="form-group">
                     <label>
@@ -832,7 +867,6 @@
         </div>
     </div>
 
-    <!-- 강의 편집 모달 -->
     <div id="editScheduleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -850,9 +884,13 @@
                         <option value="">선택 안 함</option>
                     </select>
                 </div>
+                <div id="editConflictWarning" class="conflict-list" style="display: none; margin-bottom: 16px;">
+                    <p style="color: #dc2626; font-weight: 600;">⚠️ 좌장 중복 경고</p>
+                    <p style="font-size: 14px; color: #6b7280;"></p>
+                </div>
                 <div class="form-group">
                     <label>비고</label>
-                    <textarea id="editNotes" class="form-control" rows="3" placeholder="추가 정보..."></textarea>
+                    <textarea id="editNotes" class="form-control" rows="3"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -863,7 +901,6 @@
         </div>
     </div>
 
-    <!-- 세션 모달 -->
     <div id="sessionModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -899,7 +936,6 @@
         </div>
     </div>
 
-    <!-- 강의 선택 모달 -->
     <div id="lectureSelectorModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -910,6 +946,33 @@
                 <input type="text" class="form-control" placeholder="강의 검색..." 
                        oninput="filterLectureSelector(this.value)" style="margin-bottom: 16px;">
                 <div id="lectureSelectorList" class="lecture-selector"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="breakModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Break 추가</h3>
+                <button class="close-btn" onclick="closeBreakModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>시작 시간 *</label>
+                    <input type="time" id="breakStartTime" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>지속 시간 (분) *</label>
+                    <input type="number" id="breakDuration" class="form-control" value="30" min="10" max="120">
+                </div>
+                <div class="form-group">
+                    <label>제목 *</label>
+                    <input type="text" id="breakTitle" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeBreakModal()" class="btn-secondary">취소</button>
+                <button onclick="saveBreak()" class="btn-primary">저장</button>
             </div>
         </div>
     </div>
@@ -943,6 +1006,7 @@
         let currentPhotoData = null;
         let photoZoom = 1;
         let currentEditKey = null;
+        let draggedKey = null;
 
         let eventData = {
             info: {},
@@ -957,10 +1021,13 @@
             },
             settings: {
                 defaultDuration: 20,
-                timeInterval: 20
+                timeInterval: 20,
+                bufferTime: 10,
+                breakTitle: 'Coffee Break'
             }
         };
 
+        // ===== Toast =====
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -973,6 +1040,7 @@
             }, 3000);
         }
 
+        // ===== 인증 =====
         firebase.auth().onAuthStateChanged(user => {
             currentUser = user;
             if (!user) {
@@ -982,6 +1050,7 @@
             document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
         });
 
+        // ===== 초기화 =====
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             currentEventId = urlParams.get('eventId');
@@ -1000,6 +1069,7 @@
             renderSchedule();
         });
 
+        // ===== 데이터 로드 =====
         async function loadEventData() {
             try {
                 const infoSnapshot = await firebase.database()
@@ -1038,8 +1108,7 @@
             const slots = [];
             for (let hour = 8; hour <= 18; hour++) {
                 for (let min = 0; min < 60; min += 20) {
-                    const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-                    slots.push(time);
+                    slots.push(`${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
                 }
             }
             return slots;
@@ -1088,6 +1157,7 @@
             }
         }
 
+        // ===== 탭 전환 =====
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -1104,10 +1174,172 @@
             if (tabName === 'settings') renderSettings();
         }
 
+        // ===== 시간 계산 유틸 =====
+        function timeToMinutes(time) {
+            const [h, m] = time.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function minutesToTime(mins) {
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        }
+
+        function calculateEndTime(startTime, duration) {
+            return minutesToTime(timeToMinutes(startTime) + duration);
+        }
+
+        function generateDynamicTimeSlots() {
+            const slots = [];
+            const schedule = eventData.schedule;
+            const room = eventData.roomsConfig.rooms[0];
+            
+            const timeSet = new Set();
+            
+            // 기존 시간 슬롯
+            if (eventData.roomsConfig.times) {
+                eventData.roomsConfig.times.forEach(t => timeSet.add(t));
+            }
+            
+            // 스케줄에서 시간 추출
+            Object.values(schedule).forEach(item => {
+                if (item.type === 'lecture') {
+                    const lecture = eventData.lectures[item.lectureId];
+                    if (lecture) {
+                        const startMins = timeToMinutes(item.time || '09:00');
+                        const endMins = startMins + (lecture.duration || 20);
+                        timeSet.add(minutesToTime(startMins));
+                        timeSet.add(minutesToTime(endMins));
+                    }
+                } else if (item.type === 'break') {
+                    timeSet.add(item.time);
+                    if (item.endTime) timeSet.add(item.endTime);
+                }
+            });
+            
+            return Array.from(timeSet).sort();
+        }
+
+        // ===== 연자 중복 체크 (핵심!) =====
+        function checkSpeakerConflict(speakerId, time, duration, excludeKey = null) {
+            if (!speakerId) return { hasConflict: false };
+            
+            const bufferTime = eventData.settings.bufferTime || 10;
+            const startMins = timeToMinutes(time);
+            const endMins = startMins + duration;
+            
+            const conflicts = [];
+            
+            Object.entries(eventData.schedule).forEach(([key, item]) => {
+                if (key === excludeKey) return;
+                if (item.type !== 'lecture') return;
+                
+                const lecture = eventData.lectures[item.lectureId];
+                if (!lecture) return;
+                
+                // 연자 또는 좌장으로 참여하는지 확인
+                const isSpeaker = lecture.speakerId === speakerId;
+                const isModerator = item.chairId === speakerId;
+                
+                if (isSpeaker || isModerator) {
+                    const itemStartMins = timeToMinutes(item.time || '09:00');
+                    const itemEndMins = itemStartMins + (lecture.duration || 20);
+                    
+                    // 시간 겹침 체크 (버퍼 포함)
+                    if (!(endMins + bufferTime <= itemStartMins || startMins >= itemEndMins + bufferTime)) {
+                        conflicts.push({
+                            key,
+                            time: item.time,
+                            title: lecture.title,
+                            role: isSpeaker ? 'Speaker' : 'Moderator',
+                            startMins: itemStartMins,
+                            endMins: itemEndMins
+                        });
+                    }
+                }
+            });
+            
+            return {
+                hasConflict: conflicts.length > 0,
+                conflicts,
+                message: conflicts.length > 0 ? 
+                    `${conflicts[0].time}에 이미 ${conflicts[0].role}로 배정되어 있습니다` : ''
+            };
+        }
+
+        function checkAllConflicts() {
+            const conflicts = [];
+            
+            Object.entries(eventData.schedule).forEach(([key, item]) => {
+                if (item.type !== 'lecture') return;
+                
+                const lecture = eventData.lectures[item.lectureId];
+                if (!lecture) return;
+                
+                const speakerId = lecture.speakerId;
+                const time = item.time || '09:00';
+                const duration = lecture.duration || 20;
+                
+                const result = checkSpeakerConflict(speakerId, time, duration, key);
+                if (result.hasConflict) {
+                    conflicts.push({
+                        key,
+                        lecture,
+                        speaker: eventData.speakers[speakerId],
+                        time,
+                        conflicts: result.conflicts
+                    });
+                }
+                
+                // 좌장 중복도 체크
+                if (item.chairId) {
+                    const chairResult = checkSpeakerConflict(item.chairId, time, duration, key);
+                    if (chairResult.hasConflict) {
+                        conflicts.push({
+                            key,
+                            lecture,
+                            chair: eventData.speakers[item.chairId],
+                            time,
+                            conflicts: chairResult.conflicts,
+                            isChair: true
+                        });
+                    }
+                }
+            });
+            
+            if (conflicts.length > 0) {
+                displayConflicts(conflicts);
+            } else {
+                document.getElementById('conflictAlert').style.display = 'none';
+                showToast('✅ 연자 중복이 없습니다', 'success');
+            }
+        }
+
+        function displayConflicts(conflicts) {
+            const alert = document.getElementById('conflictAlert');
+            const items = document.getElementById('conflictItems');
+            
+            items.innerHTML = conflicts.map(c => {
+                const person = c.isChair ? c.chair : c.speaker;
+                const role = c.isChair ? '좌장' : '연자';
+                return `
+                    <div class="conflict-item">
+                        <strong>${c.time}</strong> - ${c.lecture.title}<br>
+                        <small>${role}: ${person?.name || '미정'}</small><br>
+                        <small style="color: #dc2626;">⚠️ ${c.conflicts[0].time}에 ${c.conflicts[0].role}로 중복</small>
+                    </div>
+                `;
+            }).join('');
+            
+            alert.style.display = 'block';
+        }
+
+        // ===== 스케줄 렌더링 =====
         function renderSchedule() {
             const grid = document.getElementById('scheduleGrid');
             const rooms = eventData.roomsConfig.rooms || ['Room A'];
-            const times = eventData.roomsConfig.times || [];
+            const times = generateDynamicTimeSlots();
             const columns = eventData.roomsConfig.columns || ['Time', 'Title', 'Speaker', 'Moderator', 'Product', 'Sponsor'];
 
             let html = '<table class="schedule-table">';
@@ -1133,35 +1365,70 @@
                         html += `<td colspan="${columns.length}" class="session-header">${session?.name || 'Session'}</td>`;
                         html += '</tr>';
                     } else if (item.type === 'break') {
+                        const endTime = item.endTime || calculateEndTime(time, item.duration || 30);
                         html += `<tr>`;
-                        html += `<td class="time-cell">${time}</td>`;
-                        html += `<td colspan="${columns.length - 1}" class="break-row">${item.title || 'Break'}</td>`;
+                        html += `<td class="time-cell">${time} - ${endTime}</td>`;
+                        html += `<td colspan="${columns.length - 1}" class="break-row" ondblclick="editBreak('${key}')">${item.title || 'Break'}</td>`;
                         html += '</tr>';
                     } else if (item.type === 'lecture') {
                         const lecture = eventData.lectures[item.lectureId];
                         const speaker = lecture ? eventData.speakers[lecture.speakerId] : null;
                         const chair = item.chairId ? eventData.speakers[item.chairId] : null;
                         
-                        const cardClass = lecture?.isNonSponsored ? 'non-sponsored' : 
-                                        (lecture?.sponsorCompany ? 'sponsored' : '');
+                        const startTime = time;
+                        const endTime = calculateEndTime(time, lecture?.duration || 20);
+                        
+                        // 중복 체크
+                        const speakerConflict = speaker ? checkSpeakerConflict(speaker.id || lecture.speakerId, time, lecture?.duration || 20, key) : { hasConflict: false };
+                        const chairConflict = chair ? checkSpeakerConflict(item.chairId, time, lecture?.duration || 20, key) : { hasConflict: false };
+                        
+                        const hasConflict = speakerConflict.hasConflict || chairConflict.hasConflict;
+                        const conflictClass = hasConflict ? 'conflict' : '';
                         
                         html += `<tr>`;
-                        html += `<td class="time-cell">${time}</td>`;
-                        html += `<td>
-                            <div class="lecture-card ${cardClass}" 
+                        html += `<td class="time-cell">${startTime}<br>${endTime}</td>`;
+                        html += `<td class="${conflictClass}">
+                            <div class="lecture-content ${conflictClass}" 
                                  draggable="true" 
                                  data-key="${key}"
                                  ondragstart="handleDragStart(event)"
                                  ondragend="handleDragEnd(event)"
                                  ondblclick="openEditScheduleModal('${key}')">
-                                <div class="lecture-title">${lecture?.title || ''}</div>
-                                <div class="lecture-meta">⏱️ ${lecture?.duration || 20}분</div>
-                                ${lecture?.isNonSponsored ? '<span class="lecture-sponsor-badge">⚠️ 비스폰</span>' : ''}
-                                ${lecture?.sponsorCompany ? `<span class="lecture-sponsor-badge">🏢 ${lecture.sponsorCompany}</span>` : ''}
+                                <div class="lecture-title">
+                                    ${lecture?.title || ''}
+                                    ${hasConflict ? '<span class="conflict-badge">중복</span>' : ''}
+                                </div>
                             </div>
                         </td>`;
-                        html += `<td>${speaker?.name || ''}</td>`;
-                        html += `<td>${chair?.name || ''}</td>`;
+                        
+                        // Speaker
+                        html += `<td>`;
+                        if (speaker) {
+                            html += `<div class="speaker-info">`;
+                            if (speaker.photo) {
+                                html += `<img src="${speaker.photo}" class="speaker-photo" alt="${speaker.name}">`;
+                            } else {
+                                html += `<div class="speaker-photo placeholder">${speaker.name.charAt(0)}</div>`;
+                            }
+                            html += `<span class="speaker-name">${speaker.name}${speakerConflict.hasConflict ? '<span class="conflict-badge">중복</span>' : ''}</span>`;
+                            html += `</div>`;
+                        }
+                        html += `</td>`;
+                        
+                        // Moderator
+                        html += `<td>`;
+                        if (chair) {
+                            html += `<div class="speaker-info">`;
+                            if (chair.photo) {
+                                html += `<img src="${chair.photo}" class="speaker-photo" alt="${chair.name}">`;
+                            } else {
+                                html += `<div class="speaker-photo placeholder">${chair.name.charAt(0)}</div>`;
+                            }
+                            html += `<span class="speaker-name">${chair.name}${chairConflict.hasConflict ? '<span class="conflict-badge">중복</span>' : ''}</span>`;
+                            html += `</div>`;
+                        }
+                        html += `</td>`;
+                        
                         html += `<td>${lecture?.productName || ''}</td>`;
                         html += `<td>${lecture?.sponsorCompany || ''}</td>`;
                         html += '</tr>';
@@ -1176,7 +1443,7 @@
                                  ondragover="handleDragOver(event)"
                                  ondragleave="handleDragLeave(event)"
                                  onclick="openLectureSelector('${time}', '${rooms[0]}')">
-                        <div class="empty-slot">+</div>
+                        <div style="text-align: center; color: #9ca3af; padding: 20px;">+</div>
                     </td>`;
                     html += `<td></td><td></td><td></td><td></td>`;
                     html += '</tr>';
@@ -1187,11 +1454,9 @@
             grid.innerHTML = html;
         }
 
-        // 드래그앤드롭 핸들러
-        let draggedKey = null;
-
+        // ===== 드래그앤드롭 =====
         function handleDragStart(e) {
-            draggedKey = e.target.dataset.key;
+            draggedKey = e.target.closest('[data-key]').dataset.key;
             e.target.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
         }
@@ -1202,17 +1467,45 @@
 
         function handleDragOver(e) {
             e.preventDefault();
+            
+            const cell = e.currentTarget;
+            const time = cell.dataset.time;
+            
+            // 중복 체크
+            if (draggedKey) {
+                const item = eventData.schedule[draggedKey];
+                if (item && item.type === 'lecture') {
+                    const lecture = eventData.lectures[item.lectureId];
+                    if (lecture) {
+                        const conflict = checkSpeakerConflict(
+                            lecture.speakerId,
+                            time,
+                            lecture.duration || 20,
+                            draggedKey
+                        );
+                        
+                        if (conflict.hasConflict) {
+                            cell.classList.add('conflict');
+                            e.dataTransfer.dropEffect = 'none';
+                            return;
+                        }
+                    }
+                }
+            }
+            
             e.dataTransfer.dropEffect = 'move';
-            e.currentTarget.classList.add('drag-over');
+            cell.classList.add('drag-over');
         }
 
         function handleDragLeave(e) {
             e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.classList.remove('conflict');
         }
 
         async function handleDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.classList.remove('conflict');
             
             if (!draggedKey) return;
             
@@ -1222,10 +1515,29 @@
             
             if (draggedKey === newKey) return;
             
-            // 이동
+            // 중복 체크
             const item = eventData.schedule[draggedKey];
+            if (item && item.type === 'lecture') {
+                const lecture = eventData.lectures[item.lectureId];
+                if (lecture) {
+                    const conflict = checkSpeakerConflict(
+                        lecture.speakerId,
+                        newTime,
+                        lecture.duration || 20,
+                        draggedKey
+                    );
+                    
+                    if (conflict.hasConflict) {
+                        showToast(`⚠️ 연자 중복: ${conflict.message}`, 'error');
+                        draggedKey = null;
+                        return;
+                    }
+                }
+            }
+            
+            // 이동
+            eventData.schedule[newKey] = { ...item, time: newTime };
             delete eventData.schedule[draggedKey];
-            eventData.schedule[newKey] = item;
             
             await saveData();
             renderSchedule();
@@ -1234,7 +1546,7 @@
             draggedKey = null;
         }
 
-        // 편집 모달
+        // ===== 편집 모달 =====
         function openEditScheduleModal(key) {
             currentEditKey = key;
             const item = eventData.schedule[key];
@@ -1251,7 +1563,29 @@
                 chairSelect.innerHTML += `<option value="${id}" ${selected}>${speaker.name}</option>`;
             });
             
+            // 좌장 선택 시 중복 체크
+            chairSelect.addEventListener('change', function() {
+                const chairId = this.value;
+                if (chairId) {
+                    const conflict = checkSpeakerConflict(
+                        chairId,
+                        item.time || '09:00',
+                        lecture?.duration || 20,
+                        key
+                    );
+                    
+                    const warning = document.getElementById('editConflictWarning');
+                    if (conflict.hasConflict) {
+                        warning.style.display = 'block';
+                        warning.querySelector('p:last-child').textContent = conflict.message;
+                    } else {
+                        warning.style.display = 'none';
+                    }
+                }
+            });
+            
             document.getElementById('editNotes').value = item.notes || '';
+            document.getElementById('editConflictWarning').style.display = 'none';
             
             document.getElementById('editScheduleModal').classList.add('active');
         }
@@ -1266,6 +1600,24 @@
             
             const chairId = document.getElementById('editChair').value;
             const notes = document.getElementById('editNotes').value;
+            
+            // 최종 중복 체크
+            if (chairId) {
+                const item = eventData.schedule[currentEditKey];
+                const lecture = eventData.lectures[item.lectureId];
+                const conflict = checkSpeakerConflict(
+                    chairId,
+                    item.time || '09:00',
+                    lecture?.duration || 20,
+                    currentEditKey
+                );
+                
+                if (conflict.hasConflict) {
+                    if (!confirm(`⚠️ 좌장 중복: ${conflict.message}\n\n그래도 저장하시겠습니까?`)) {
+                        return;
+                    }
+                }
+            }
             
             eventData.schedule[currentEditKey].chairId = chairId || null;
             eventData.schedule[currentEditKey].notes = notes || '';
@@ -1288,9 +1640,7 @@
             }
         }
 
-        // 나머지 함수들은 이전과 동일...
-        // (강의 선택 모달, 연자 관리, 강의 관리, 세션 관리, 설정, 내보내기 등)
-        
+        // ===== 강의 선택 모달 =====
         function openLectureSelector(time, room) {
             selectedTimeSlot = { time, room };
             const modal = document.getElementById('lectureSelectorModal');
@@ -1303,10 +1653,21 @@
             } else {
                 list.innerHTML = lectures.map(([id, lecture]) => {
                     const speaker = eventData.speakers[lecture.speakerId];
+                    
+                    // 중복 체크
+                    const conflict = speaker ? checkSpeakerConflict(
+                        lecture.speakerId,
+                        time,
+                        lecture.duration || 20
+                    ) : { hasConflict: false };
+                    
+                    const conflictClass = conflict.hasConflict ? 'conflict' : '';
+                    const conflictMsg = conflict.hasConflict ? `<br><small style="color: #dc2626;">⚠️ ${conflict.message}</small>` : '';
+                    
                     return `
-                        <div class="lecture-selector-item" onclick="selectLecture('${id}')">
+                        <div class="lecture-selector-item ${conflictClass}" onclick="${conflict.hasConflict ? '' : `selectLecture('${id}')`}">
                             <h5>${lecture.title}</h5>
-                            <p>연자: ${speaker?.name || '미정'} | ${lecture.duration || 20}분</p>
+                            <p>연자: ${speaker?.name || '미정'} | ${lecture.duration || 20}분${conflictMsg}</p>
                         </div>
                     `;
                 }).join('');
@@ -1322,9 +1683,24 @@
         async function selectLecture(lectureId) {
             if (selectedTimeSlot) {
                 const key = `${selectedTimeSlot.time}-${selectedTimeSlot.room}`;
+                const lecture = eventData.lectures[lectureId];
+                
+                // 최종 중복 체크
+                const conflict = checkSpeakerConflict(
+                    lecture.speakerId,
+                    selectedTimeSlot.time,
+                    lecture.duration || 20
+                );
+                
+                if (conflict.hasConflict) {
+                    showToast(`⚠️ 연자 중복: ${conflict.message}`, 'error');
+                    return;
+                }
+                
                 eventData.schedule[key] = {
                     type: 'lecture',
                     lectureId: lectureId,
+                    time: selectedTimeSlot.time,
                     chairId: null,
                     notes: '',
                     placedAt: Date.now()
@@ -1343,29 +1719,63 @@
             });
         }
 
-        async function addBreak() {
-            const time = prompt('Break 시작 시간 (예: 11:00):');
-            if (!time) return;
+        // ===== Break 관리 =====
+        function addBreak() {
+            document.getElementById('breakStartTime').value = '';
+            document.getElementById('breakDuration').value = '30';
+            document.getElementById('breakTitle').value = eventData.settings.breakTitle || 'Coffee Break';
+            document.getElementById('breakModal').classList.add('active');
+        }
+
+        function closeBreakModal() {
+            document.getElementById('breakModal').classList.remove('active');
+        }
+
+        async function saveBreak() {
+            const time = document.getElementById('breakStartTime').value;
+            const duration = parseInt(document.getElementById('breakDuration').value);
+            const title = document.getElementById('breakTitle').value.trim();
             
-            const title = prompt('Break 제목 (예: Coffee Break):');
-            if (!title) return;
+            if (!time || !duration || !title) {
+                showToast('모든 필드를 입력해주세요', 'warning');
+                return;
+            }
             
             const room = eventData.roomsConfig.rooms[0];
             const key = `${time}-${room}`;
+            const endTime = calculateEndTime(time, duration);
             
             eventData.schedule[key] = {
                 type: 'break',
-                title: title
+                title: title,
+                time: time,
+                duration: duration,
+                endTime: endTime
             };
             
             await saveData();
+            closeBreakModal();
             renderSchedule();
+            showToast('Break가 추가되었습니다', 'success');
+        }
+
+        function editBreak(key) {
+            const item = eventData.schedule[key];
+            if (!item || item.type !== 'break') return;
+            
+            document.getElementById('breakStartTime').value = item.time || '';
+            document.getElementById('breakDuration').value = item.duration || 30;
+            document.getElementById('breakTitle').value = item.title || '';
+            
+            currentEditKey = key;
+            document.getElementById('breakModal').classList.add('active');
         }
 
         function addSessionHeader() {
             showAddSessionModal();
         }
 
+        // ===== 연자 관리 =====
         function renderSpeakers() {
             const list = document.getElementById('speakersList');
             const speakers = Object.entries(eventData.speakers);
@@ -1381,8 +1791,8 @@
                         `<img src="${speaker.photo}" class="speaker-photo" alt="${speaker.name}">` :
                         `<div class="speaker-photo placeholder">${speaker.name.charAt(0)}</div>`
                     }
-                    <div class="speaker-info">
-                        <div class="speaker-name">${speaker.name}</div>
+                    <div class="speaker-info-detail">
+                        <div class="speaker-name-large">${speaker.name}</div>
                         ${speaker.affiliation ? `<div class="speaker-detail">📍 ${speaker.affiliation}</div>` : ''}
                         ${speaker.email ? `<div class="speaker-detail">📧 ${speaker.email}</div>` : ''}
                         <div class="actions">
@@ -1401,7 +1811,6 @@
             document.getElementById('speakerName').value = '';
             document.getElementById('speakerAffiliation').value = '';
             document.getElementById('speakerEmail').value = '';
-            document.getElementById('speakerPhone').value = '';
             document.getElementById('photoPreview').innerHTML = '<p>📷 클릭하여 사진 업로드</p><small>권장 크기: 400x400px</small>';
             document.getElementById('photoControls').style.display = 'none';
             document.getElementById('speakerModal').classList.add('active');
@@ -1450,7 +1859,6 @@
             document.getElementById('speakerName').value = speaker.name || '';
             document.getElementById('speakerAffiliation').value = speaker.affiliation || '';
             document.getElementById('speakerEmail').value = speaker.email || '';
-            document.getElementById('speakerPhone').value = speaker.phone || '';
             
             if (speaker.photo) {
                 currentPhotoData = speaker.photo;
@@ -1473,7 +1881,6 @@
                 name,
                 affiliation: document.getElementById('speakerAffiliation').value.trim(),
                 email: document.getElementById('speakerEmail').value.trim(),
-                phone: document.getElementById('speakerPhone').value.trim(),
                 photo: currentPhotoData || ''
             };
 
@@ -1503,6 +1910,7 @@
             });
         }
 
+        // ===== 강의 관리 =====
         function renderLectures() {
             const list = document.getElementById('lecturesList');
             const lectures = Object.entries(eventData.lectures);
@@ -1633,6 +2041,7 @@
             });
         }
 
+        // ===== 세션 관리 =====
         function renderSessions() {
             const list = document.getElementById('sessionsList');
             const sessions = Object.entries(eventData.sessions);
@@ -1736,6 +2145,7 @@
             showToast('세션이 삭제되었습니다', 'success');
         }
 
+        // ===== 설정 =====
         function renderSettings() {
             const roomsList = document.getElementById('roomsList');
             const rooms = eventData.roomsConfig.rooms || [];
@@ -1750,6 +2160,8 @@
             
             document.getElementById('settingDefaultDuration').value = eventData.settings.defaultDuration || 20;
             document.getElementById('settingTimeInterval').value = eventData.settings.timeInterval || 20;
+            document.getElementById('settingBufferTime').value = eventData.settings.bufferTime || 10;
+            document.getElementById('settingBreakTitle').value = eventData.settings.breakTitle || 'Coffee Break';
         }
 
         async function addRoomSetting() {
@@ -1799,8 +2211,7 @@
             let currentMin = startMin;
             
             while (currentHour < endHour || (currentHour === endHour && currentMin <= endMin)) {
-                const time = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
-                slots.push(time);
+                slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`);
                 
                 currentMin += interval;
                 if (currentMin >= 60) {
@@ -1812,9 +2223,11 @@
             eventData.roomsConfig.times = slots;
             eventData.settings.timeInterval = interval;
             eventData.settings.defaultDuration = parseInt(document.getElementById('settingDefaultDuration').value);
+            eventData.settings.bufferTime = parseInt(document.getElementById('settingBufferTime').value);
+            eventData.settings.breakTitle = document.getElementById('settingBreakTitle').value;
             
             await saveData();
-            showToast('시간 슬롯이 생성되었습니다', 'success');
+            showToast('설정이 저장되었습니다', 'success');
             renderSchedule();
         }
 
@@ -1822,14 +2235,32 @@
             loadEventData();
         }
 
+        // ===== 내보내기 =====
         function exportToExcel() {
             try {
                 const wb = XLSX.utils.book_new();
                 const rooms = eventData.roomsConfig.rooms || ['Room A'];
-                const times = eventData.roomsConfig.times || [];
+                const times = generateDynamicTimeSlots();
+                
+                const exportOptions = {
+                    time: true,
+                    title: true,
+                    speaker: true,
+                    moderator: document.getElementById('exportModerator').checked,
+                    product: document.getElementById('exportProduct').checked,
+                    sponsor: document.getElementById('exportSponsor').checked
+                };
 
                 rooms.forEach(room => {
-                    const roomData = [['Date', 'Time', 'Title', 'Speaker', 'Moderator', 'Product', 'Sponsor']];
+                    const headers = [];
+                    if (exportOptions.time) headers.push('Time');
+                    if (exportOptions.title) headers.push('Title');
+                    if (exportOptions.speaker) headers.push('Speaker');
+                    if (exportOptions.moderator) headers.push('Moderator');
+                    if (exportOptions.product) headers.push('Product');
+                    if (exportOptions.sponsor) headers.push('Sponsor');
+                    
+                    const roomData = [headers];
                     
                     times.forEach(time => {
                         const key = `${time}-${room}`;
@@ -1839,16 +2270,17 @@
                             const lecture = eventData.lectures[item.lectureId];
                             const speaker = lecture ? eventData.speakers[lecture.speakerId] : null;
                             const chair = item.chairId ? eventData.speakers[item.chairId] : null;
+                            const endTime = calculateEndTime(time, lecture?.duration || 20);
                             
-                            roomData.push([
-                                eventData.info.name || '',
-                                time,
-                                lecture?.title || '',
-                                speaker?.name || '',
-                                chair?.name || '',
-                                lecture?.productName || '',
-                                lecture?.sponsorCompany || ''
-                            ]);
+                            const row = [];
+                            if (exportOptions.time) row.push(`${time}-${endTime}`);
+                            if (exportOptions.title) row.push(lecture?.title || '');
+                            if (exportOptions.speaker) row.push(speaker?.name || '');
+                            if (exportOptions.moderator) row.push(chair?.name || '');
+                            if (exportOptions.product) row.push(lecture?.productName || '');
+                            if (exportOptions.sponsor) row.push(lecture?.sponsorCompany || '');
+                            
+                            roomData.push(row);
                         }
                     });
                     
