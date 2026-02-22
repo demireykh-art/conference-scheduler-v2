@@ -202,10 +202,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- V2 Configuration -->
-    <script src="config/firebase-v2.js"></script>
-    <script src="config/timezones.js"></script>
-    <script src="config/i18n.js"></script>
+<!-- Firebase Configuration (직접 포함) -->
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+        authDomain: "scheduler2-99724.firebaseapp.com",
+        databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "scheduler2-99724",
+        storageBucket: "scheduler2-99724.firebasestorage.app",
+        messagingSenderId: "1023522399376",
+        appId: "1:1023522399376:web:201a526635a7058917e415"
+    };
+    
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
+    const FirebaseRefs = {
+        eventInfo(eventId) { return firebase.database().ref(`/events/${eventId}/info`); },
+        eventData(eventId) { return firebase.database().ref(`/events/${eventId}/data`); },
+        speakers(eventId) { return firebase.database().ref(`/events/${eventId}/data/speakers`); },
+        lectures(eventId) { return firebase.database().ref(`/events/${eventId}/data/lectures`); },
+        schedule(eventId) { return firebase.database().ref(`/events/${eventId}/data/schedule`); },
+        sessions(eventId) { return firebase.database().ref(`/events/${eventId}/data/sessions`); },
+        chairs(eventId) { return firebase.database().ref(`/events/${eventId}/data/chairs`); },
+        roomsConfig(eventId) { return firebase.database().ref(`/events/${eventId}/data/roomsConfig`); }
+    };
+</script>
 
     <!-- Core Scripts -->
     <script src="js/core/state.js"></script>
