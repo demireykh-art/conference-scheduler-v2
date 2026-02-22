@@ -1362,13 +1362,29 @@
                     if (item.type === 'session') {
                         const session = eventData.sessions[item.sessionId];
                         html += `<tr>`;
-                        html += `<td colspan="${columns.length}" class="session-header">${session?.name || 'Session'}</td>`;
+                        html += `<td colspan="${columns.length}" class="session-header" 
+                                     draggable="true"
+                                     data-key="${key}"
+                                     ondragstart="handleDragStart(event)"
+                                     ondragend="handleDragEnd(event)"
+                                     ondblclick="editSessionInSchedule('${key}')"
+                                     style="cursor: move;">
+                            ${session?.name || 'Session'}
+                        </td>`;
                         html += '</tr>';
                     } else if (item.type === 'break') {
                         const endTime = item.endTime || calculateEndTime(time, item.duration || 30);
                         html += `<tr>`;
                         html += `<td class="time-cell">${time} - ${endTime}</td>`;
-                        html += `<td colspan="${columns.length - 1}" class="break-row" ondblclick="editBreak('${key}')">${item.title || 'Break'}</td>`;
+                        html += `<td colspan="${columns.length - 1}" class="break-row" 
+                                     draggable="true"
+                                     data-key="${key}"
+                                     ondragstart="handleDragStart(event)"
+                                     ondragend="handleDragEnd(event)"
+                                     ondblclick="editBreak('${key}')"
+                                     style="cursor: move;">
+                            ${item.title || 'Break'}
+                        </td>`;
                         html += '</tr>';
                     } else if (item.type === 'lecture') {
                         const lecture = eventData.lectures[item.lectureId];
@@ -1515,9 +1531,22 @@
             
             if (draggedKey === newKey) return;
             
-            // 중복 체크
             const item = eventData.schedule[draggedKey];
-            if (item && item.type === 'lecture') {
+            
+            // 세션 또는 Break 이동
+            if (item.type === 'session' || item.type === 'break') {
+                eventData.schedule[newKey] = { ...item, time: newTime };
+                delete eventData.schedule[draggedKey];
+                
+                await saveData();
+                renderSchedule();
+                showToast(item.type === 'session' ? '세션이 이동되었습니다' : 'Break가 이동되었습니다', 'success');
+                draggedKey = null;
+                return;
+            }
+            
+            // 강의 이동 (기존 중복 체크 포함)
+            if (item.type === 'lecture') {
                 const lecture = eventData.lectures[item.lectureId];
                 if (lecture) {
                     const conflict = checkSpeakerConflict(
@@ -1721,6 +1750,7 @@
 
         // ===== Break 관리 =====
         function addBreak() {
+            currentEditKey = null;
             document.getElementById('breakStartTime').value = '';
             document.getElementById('breakDuration').value = '30';
             document.getElementById('breakTitle').value = eventData.settings.breakTitle || 'Coffee Break';
@@ -1742,9 +1772,18 @@
             }
             
             const room = eventData.roomsConfig.rooms[0];
-            const key = `${time}-${room}`;
             const endTime = calculateEndTime(time, duration);
             
+            if (currentEditKey) {
+                // 수정 모드
+                delete eventData.schedule[currentEditKey];
+                showToast('Break가 수정되었습니다', 'success');
+            } else {
+                // 추가 모드
+                showToast('Break가 추가되었습니다', 'success');
+            }
+            
+            const key = `${time}-${room}`;
             eventData.schedule[key] = {
                 type: 'break',
                 title: title,
@@ -1753,10 +1792,10 @@
                 endTime: endTime
             };
             
+            currentEditKey = null;
             await saveData();
             closeBreakModal();
             renderSchedule();
-            showToast('Break가 추가되었습니다', 'success');
         }
 
         function editBreak(key) {
@@ -1773,6 +1812,32 @@
 
         function addSessionHeader() {
             showAddSessionModal();
+        }
+
+        // 스케줄에서 세션 편집
+        function editSessionInSchedule(key) {
+            const item = eventData.schedule[key];
+            if (!item || item.type !== 'session') return;
+            
+            const session = eventData.sessions[item.sessionId];
+            if (!session) return;
+            
+            // 편집 모드로 세션 모달 열기
+            editingId = item.sessionId;
+            currentEditKey = key;
+            
+            document.getElementById('sessionModalTitle').textContent = '세션 수정';
+            document.getElementById('sessionName').value = session.name || '';
+            document.getElementById('sessionColor').value = session.color || '#dbeafe';
+            
+            const chairSelect = document.getElementById('sessionChair');
+            chairSelect.innerHTML = '<option value="">선택 안 함</option>';
+            Object.entries(eventData.speakers).forEach(([sid, speaker]) => {
+                const selected = sid === session.chairId ? 'selected' : '';
+                chairSelect.innerHTML += `<option value="${sid}" ${selected}>${speaker.name}</option>`;
+            });
+            
+            document.getElementById('sessionModal').classList.add('active');
         }
 
         // ===== 연자 관리 =====
@@ -2083,6 +2148,8 @@
 
         function closeSessionModal() {
             document.getElementById('sessionModal').classList.remove('active');
+            editingId = null;
+            currentEditKey = null;
         }
 
         function editSession(id) {
@@ -2110,9 +2177,6 @@
                 return;
             }
 
-            const time = prompt('세션 시작 시간 (예: 09:00):');
-            if (!time) return;
-
             const sessionData = {
                 name,
                 chairId: document.getElementById('sessionChair').value,
@@ -2122,18 +2186,32 @@
             const id = editingId || `session_${Date.now()}`;
             eventData.sessions[id] = sessionData;
             
-            const room = eventData.roomsConfig.rooms[0];
-            const key = `${time}-${room}`;
-            eventData.schedule[key] = {
-                type: 'session',
-                sessionId: id
-            };
+            // 편집 모드인 경우 (스케줄에서 더블클릭)
+            if (currentEditKey) {
+                // 기존 스케줄 위치 유지
+                eventData.schedule[currentEditKey].sessionId = id;
+                showToast('세션이 수정되었습니다', 'success');
+            } else {
+                // 새로 추가하는 경우에만 시간 입력
+                const time = prompt('세션 시작 시간 (예: 09:00):');
+                if (!time) return;
+                
+                const room = eventData.roomsConfig.rooms[0];
+                const key = `${time}-${room}`;
+                eventData.schedule[key] = {
+                    type: 'session',
+                    sessionId: id,
+                    time: time
+                };
+                showToast('세션이 추가되었습니다', 'success');
+            }
             
+            editingId = null;
+            currentEditKey = null;
             await saveData();
             closeSessionModal();
             renderSessions();
             renderSchedule();
-            showToast(editingId ? '세션이 수정되었습니다' : '세션이 추가되었습니다', 'success');
         }
 
         async function deleteSession(id) {
