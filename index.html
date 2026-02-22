@@ -120,7 +120,39 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <!-- V2 Configuration -->
-    <script src="config/firebase-v2.js"></script>
+<script>
+    // Firebase V2 Configuration
+    const firebaseConfigV2 = {
+        apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+        authDomain: "scheduler2-99724.firebaseapp.com",
+        databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "scheduler2-99724",
+        storageBucket: "scheduler2-99724.firebasestorage.app",
+        messagingSenderId: "1023522399376",
+        appId: "1:1023522399376:web:201a526635a7058917e415"
+    };
+
+    // Firebase 초기화
+    function initializeFirebase() {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfigV2);
+            console.log('[Firebase] V2 초기화 완료');
+        }
+    }
+
+    // Firebase Database 참조 헬퍼
+    const FirebaseRefs = {
+        eventInfo(eventId) {
+            return firebase.database().ref(`/events/${eventId}/info`);
+        },
+        eventData(eventId) {
+            return firebase.database().ref(`/events/${eventId}/data`);
+        },
+        userEvents(userId) {
+            return firebase.database().ref(`/users/${userId}/events`);
+        }
+    };
+</script>
     <script src="config/timezones.js"></script>
 
     <!-- Core Scripts -->
