@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Scheduler V2.0</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover { background: #357ae8; }
+        #status { margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Conference Scheduler V2.0</h1>
+        <p>Global Multi-Event Platform</p>
+        
+        <button class="btn" onclick="signInWithGoogle()">
+            🔐 Google로 로그인
+        </button>
+        
+        <div id="status"></div>
+        <div id="userInfo" style="display:none; margin-top: 20px;">
+            <p>로그인 성공!</p>
+            <p id="userName"></p>
+            <button class="btn" onclick="testFirebase()">Firebase 테스트</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+            authDomain: "scheduler2-99724.firebaseapp.com",
+            databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scheduler2-99724",
+            storageBucket: "scheduler2-99724.firebasestorage.app",
+            messagingSenderId: "1023522399376",
+            appId: "1:1023522399376:web:201a526635a7058917e415"
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        console.log('Firebase 초기화 완료');
+
+        // 인증 상태 확인
+        firebase.auth().onAuthStateChanged(user => {
+            const status = document.getElementById('status');
+            const userInfo = document.getElementById('userInfo');
+            
+            if (user) {
+                console.log('로그인됨:', user.email);
+                status.textContent = '로그인 완료!';
+                userInfo.style.display = 'block';
+                document.getElementById('userName').textContent = user.displayName || user.email;
+            } else {
+                console.log('로그아웃 상태');
+                status.textContent = '로그인이 필요합니다';
+                userInfo.style.display = 'none';
+            }
+        });
+
+        // Google 로그인
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    console.log('로그인 성공:', result.user);
+                    alert('로그인 성공!');
+                })
+                .catch((error) => {
+                    console.error('로그인 오류:', error);
+                    alert('로그인 실패: ' + error.message);
+                });
+        }
+
+        // Firebase Database 테스트
+        function testFirebase() {
+            const testRef = firebase.database().ref('test');
+            testRef.set({
+                message: 'Hello V2!',
+                timestamp: Date.now()
+            })
+            .then(() => {
+                alert('Firebase 연결 성공! ✅');
+                console.log('데이터 저장 성공');
+            })
+            .catch((error) => {
+                alert('Firebase 오류: ' + error.message);
+                console.error('데이터 저장 오류:', error);
+            });
+        }
+    </script>
+</body>
+</html>

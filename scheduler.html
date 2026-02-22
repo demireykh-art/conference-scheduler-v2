@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Scheduler V2.0</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/mobile.css">
+</head>
+<body>
+    <!-- 로딩 스크린 -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loader"></div>
+        <p>스케줄러 로딩 중...</p>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div id="mainContainer" style="display: none;">
+        <!-- 상단 툴바 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button onclick="goToLobby()" class="btn-icon" title="행사 목록으로">
+                    🏠
+                </button>
+                <div class="event-info">
+                    <h2 id="eventTitle">행사명</h2>
+                    <span id="eventMeta" class="event-meta"></span>
+                </div>
+            </div>
+
+            <div class="toolbar-center">
+                <button onclick="showView('schedule')" class="btn-tab active" data-view="schedule">
+                    📅 스케줄
+                </button>
+                <button onclick="showView('lectures')" class="btn-tab" data-view="lectures">
+                    📚 강의 목록
+                </button>
+                <button onclick="showView('speakers')" class="btn-tab" data-view="speakers">
+                    👤 연자 관리
+                </button>
+                <button onclick="showView('sessions')" class="btn-tab" data-view="sessions">
+                    🎯 세션 관리
+                </button>
+            </div>
+
+            <div class="toolbar-right">
+                <!-- 모바일 뷰 토글 -->
+                <button id="mobileViewToggle" class="btn-icon" style="display: none;" title="뷰 전환">
+                    📱
+                </button>
+                
+                <!-- 실시간 협업 표시 -->
+                <div id="presenceIndicator" class="presence-indicator" style="display: none;">
+                    <span class="presence-dot"></span>
+                    <span id="presenceCount">0</span>명 접속 중
+                </div>
+
+                <!-- 저장 상태 -->
+                <div id="syncStatus" class="sync-status">
+                    <span class="sync-icon">✓</span>
+                    <span id="syncText">저장됨</span>
+                </div>
+
+                <!-- 내보내기 메뉴 -->
+                <div class="dropdown">
+                    <button class="btn-secondary">📤 내보내기</button>
+                    <div class="dropdown-content">
+                        <a onclick="exportToPDF()">📄 영문 PDF</a>
+                        <a onclick="exportToExcel()">📊 Excel</a>
+                        <a onclick="exportToJSON()">💾 JSON 백업</a>
+                    </div>
+                </div>
+
+                <!-- 사용자 메뉴 -->
+                <div class="user-menu">
+                    <img id="userAvatar" class="avatar" alt="User">
+                    <div class="user-dropdown">
+                        <div id="userName" class="user-name"></div>
+                        <div id="userEmail" class="user-email"></div>
+                        <hr>
+                        <a onclick="showSettings()">⚙️ 설정</a>
+                        <a onclick="signOut()">🚪 로그아웃</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 뷰 컨테이너 -->
+        <div id="viewContainer" class="view-container">
+            <!-- 스케줄 뷰 -->
+            <div id="scheduleView" class="view active">
+                <div class="schedule-toolbar">
+                    <div class="toolbar-section">
+                        <button onclick="addNewSession()" class="btn-primary">
+                            ➕ 세션 추가
+                        </button>
+                        <button onclick="configureRooms()" class="btn-secondary">
+                            🏛️ 룸 설정
+                        </button>
+                        <button onclick="showConflictCheck()" class="btn-secondary">
+                            ⚠️ 충돌 검사
+                        </button>
+                    </div>
+
+                    <div class="toolbar-section">
+                        <label>세션 선택:</label>
+                        <select id="sessionSelector" class="form-control" onchange="changeSession()">
+                            <option value="">전체 보기</option>
+                        </select>
+                    </div>
+
+                    <div class="toolbar-section">
+                        <button onclick="zoomIn()" class="btn-icon">🔍+</button>
+                        <button onclick="zoomOut()" class="btn-icon">🔍-</button>
+                        <button onclick="resetZoom()" class="btn-icon">↺</button>
+                    </div>
+                </div>
+
+                <div id="scheduleGrid" class="schedule-grid">
+                    <!-- 스케줄 그리드가 여기에 동적으로 생성됨 -->
+                </div>
+            </div>
+
+            <!-- 강의 목록 뷰 -->
+            <div id="lecturesView" class="view">
+                <div class="list-toolbar">
+                    <button onclick="addNewLecture()" class="btn-primary">
+                        ➕ 강의 추가
+                    </button>
+                    <button onclick="bulkUploadLectures()" class="btn-secondary">
+                        📤 Excel 업로드
+                    </button>
+                    <button onclick="checkTypos()" class="btn-secondary">
+                        🔍 오타 검사
+                    </button>
+                    
+                    <div class="search-box">
+                        <input type="text" id="lectureSearch" placeholder="강의 검색..." 
+                               oninput="filterLectures()">
+                    </div>
+                </div>
+
+                <div id="lecturesList" class="data-list">
+                    <!-- 강의 목록 테이블 -->
+                </div>
+            </div>
+
+            <!-- 연자 관리 뷰 -->
+            <div id="speakersView" class="view">
+                <div class="list-toolbar">
+                    <button onclick="addNewSpeaker()" class="btn-primary">
+                        ➕ 연자 추가
+                    </button>
+                    <button onclick="bulkUploadSpeakers()" class="btn-secondary">
+                        📤 Excel 업로드
+                    </button>
+                    <button onclick="exportSpeakers()" class="btn-secondary">
+                        📥 연자 목록 다운로드
+                    </button>
+                    
+                    <div class="search-box">
+                        <input type="text" id="speakerSearch" placeholder="연자 검색..." 
+                               oninput="filterSpeakers()">
+                    </div>
+                </div>
+
+                <div id="speakersList" class="data-list">
+                    <!-- 연자 목록 -->
+                </div>
+            </div>
+
+            <!-- 세션 관리 뷰 -->
+            <div id="sessionsView" class="view">
+                <div class="list-toolbar">
+                    <button onclick="addNewSession()" class="btn-primary">
+                        ➕ 세션 추가
+                    </button>
+                    <button onclick="reorderSessions()" class="btn-secondary">
+                        ↕️ 순서 변경
+                    </button>
+                </div>
+
+                <div id="sessionsList" class="data-list">
+                    <!-- 세션 목록 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 컨테이너 -->
+    <div id="modalContainer"></div>
+
+    <!-- Toast 알림 -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- V2 Configuration -->
+    <script src="config/firebase-v2.js"></script>
+    <script src="config/timezones.js"></script>
+    <script src="config/i18n.js"></script>
+
+    <!-- Core Scripts -->
+    <script src="js/core/state.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/ui/toast.js"></script>
+
+    <!-- Feature Scripts -->
+    <script src="js/features/presence.js"></script>
+    <script src="js/features/mobile.js"></script>
+    <script src="js/features/schedule.js"></script>
+    <script src="js/features/lectures.js"></script>
+    <script src="js/features/sessions.js"></script>
+    <script src="js/features/chairs.js"></script>
+    <script src="js/features/sponsor.js"></script>
+    <script src="js/features/upload.js"></script>
+
+    <!-- UI Scripts -->
+    <script src="js/ui/modals.js"></script>
+
+    <!-- Export Scripts -->
+    <script src="js/export/leaflet.js"></script>
+    <script src="js/export/excel.js"></script>
+
+    <!-- Tools -->
+    <script src="js/tools/typo-check.js"></script>
+
+    <!-- Main App -->
+    <script src="js/core/app.js"></script>
+
+    <script>
+        // 앱 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // URL에서 eventId 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('eventId');
+
+            if (!eventId) {
+                showToast('행사 ID가 없습니다. 로비로 이동합니다.', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+
+            // Firebase 초기화
+            initializeFirebase();
+
+            // 인증 확인
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                try {
+                    // 앱 초기화
+                    await initializeApp(eventId, user);
+                    
+                    // 로딩 화면 숨기기
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('mainContainer').style.display = 'block';
+                } catch (error) {
+                    console.error('앱 초기화 오류:', error);
+                    showToast('앱 로딩 중 오류가 발생했습니다', 'error');
+                }
+            });
+        });
+
+        function goToLobby() {
+            if (AppState.isDirty) {
+                if (!confirm('저장하지 않은 변경사항이 있습니다. 나가시겠습니까?')) {
+                    return;
+                }
+            }
+            window.location.href = 'index.html';
+        }
+
+        function showView(viewName) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.btn-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 모든 뷰 숨기기
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            // 선택된 탭/뷰 활성화
+            document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+            document.getElementById(`${viewName}View`).classList.add('active');
+
+            // 뷰별 데이터 갱신
+            switch(viewName) {
+                case 'schedule':
+                    updateScheduleDisplay();
+                    break;
+                case 'lectures':
+                    updateLecturesList();
+                    break;
+                case 'speakers':
+                    updateSpeakersList();
+                    break;
+                case 'sessions':
+                    updateSessionsList();
+                    break;
+            }
+        }
+
+        function signOut() {
+            if (AppState.isDirty) {
+                if (!confirm('저장하지 않은 변경사항이 있습니다. 로그아웃하시겠습니까?')) {
+                    return;
+                }
+            }
+            
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>
