@@ -81,10 +81,6 @@
                         <option value="ID">🇮🇩 인도네시아 (Indonesia)</option>
                         <option value="VN">🇻🇳 베트남 (Vietnam)</option>
                         <option value="SG">🇸🇬 싱가포르 (Singapore)</option>
-                        <option value="MY">🇲🇾 말레이시아 (Malaysia)</option>
-                        <option value="PH">🇵🇭 필리핀 (Philippines)</option>
-                        <option value="US">🇺🇸 미국 (United States)</option>
-                        <option value="GB">🇬🇧 영국 (United Kingdom)</option>
                     </select>
                 </div>
 
@@ -96,10 +92,6 @@
                         <option value="Asia/Tokyo">Asia/Tokyo (JST, UTC+9)</option>
                         <option value="Asia/Bangkok">Asia/Bangkok (ICT, UTC+7)</option>
                         <option value="Asia/Jakarta">Asia/Jakarta (WIB, UTC+7)</option>
-                        <option value="Asia/Singapore">Asia/Singapore (SGT, UTC+8)</option>
-                        <option value="Asia/Manila">Asia/Manila (PHT, UTC+8)</option>
-                        <option value="America/New_York">America/New_York (EST, UTC-5)</option>
-                        <option value="Europe/London">Europe/London (GMT, UTC+0)</option>
                     </select>
                 </div>
 
@@ -109,64 +101,12 @@
                         <option value="conference">학술대회 (Conference)</option>
                         <option value="workshop">워크샵 (Workshop)</option>
                         <option value="symposium">심포지엄 (Symposium)</option>
-                        <option value="seminar">세미나 (Seminar)</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label>행사 설명</label>
-                    <textarea id="eventDescription" class="form-control" rows="3"
-                              placeholder="행사에 대한 간단한 설명 (선택사항)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button onclick="closeCreateEventModal()" class="btn-secondary">취소</button>
                 <button onclick="createEvent()" class="btn-primary">생성하기</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- V1 데이터 마이그레이션 모달 -->
-    <div id="migrationModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📦 V1 데이터 가져오기</h3>
-                <button onclick="closeMigrationModal()" class="close-btn">✕</button>
-            </div>
-            <div class="modal-body">
-                <p>기존 V1 스케줄러의 데이터를 이 행사로 가져옵니다.</p>
-                
-                <div class="alert alert-warning">
-                    ⚠️ 이 작업은 현재 행사의 모든 데이터를 덮어씁니다. 
-                    기존 데이터가 있다면 먼저 백업하세요.
-                </div>
-
-                <div class="form-group">
-                    <label>V1 Firebase 프로젝트 ID</label>
-                    <input type="text" id="v1ProjectId" class="form-control" 
-                           placeholder="기존 프로젝트 ID">
-                </div>
-
-                <div class="form-group">
-                    <label>V1 API Key</label>
-                    <input type="password" id="v1ApiKey" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label>또는 JSON 백업 파일 업로드</label>
-                    <input type="file" id="v1JsonFile" accept=".json" class="form-control">
-                </div>
-
-                <div id="migrationProgress" style="display: none;">
-                    <div class="progress-bar">
-                        <div id="migrationProgressBar" class="progress-fill"></div>
-                    </div>
-                    <p id="migrationStatus">마이그레이션 진행 중...</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeMigrationModal()" class="btn-secondary">취소</button>
-                <button onclick="startMigration()" class="btn-primary">가져오기 시작</button>
             </div>
         </div>
     </div>
@@ -186,7 +126,6 @@
     <!-- Core Scripts -->
     <script src="js/ui/toast.js"></script>
     <script src="js/features/lobby.js"></script>
-    <script src="js/tools/migration.js"></script>
 
     <script>
         // 앱 초기화
@@ -239,12 +178,9 @@
 
         function closeCreateEventModal() {
             document.getElementById('createEventModal').style.display = 'none';
-            // 폼 초기화
             document.getElementById('eventName').value = '';
             document.getElementById('eventCountry').value = '';
             document.getElementById('eventTimezone').value = '';
-            document.getElementById('eventType').value = 'conference';
-            document.getElementById('eventDescription').value = '';
         }
 
         async function createEvent() {
@@ -252,7 +188,6 @@
             const country = document.getElementById('eventCountry').value;
             const timezone = document.getElementById('eventTimezone').value;
             const type = document.getElementById('eventType').value;
-            const description = document.getElementById('eventDescription').value.trim();
 
             if (!name || !country || !timezone) {
                 showToast('필수 항목을 모두 입력해주세요', 'warning');
@@ -261,17 +196,12 @@
 
             try {
                 const eventId = await EventLobby.createNewEvent({
-                    name,
-                    country,
-                    timezone,
-                    type,
-                    description
+                    name, country, timezone, type
                 });
 
                 showToast('행사가 생성되었습니다!', 'success');
                 closeCreateEventModal();
 
-                // 행사로 이동
                 setTimeout(() => {
                     EventLobby.switchToEvent(eventId);
                 }, 1000);
@@ -281,47 +211,10 @@
             }
         }
 
-        function closeMigrationModal() {
-            document.getElementById('migrationModal').style.display = 'none';
-        }
-
-        async function startMigration() {
-            const projectId = document.getElementById('v1ProjectId').value.trim();
-            const apiKey = document.getElementById('v1ApiKey').value.trim();
-            const jsonFile = document.getElementById('v1JsonFile').files[0];
-
-            if (!jsonFile && (!projectId || !apiKey)) {
-                showToast('Firebase 정보를 입력하거나 JSON 파일을 업로드하세요', 'warning');
-                return;
-            }
-
-            document.getElementById('migrationProgress').style.display = 'block';
-
-            try {
-                if (jsonFile) {
-                    await MigrationTool.migrateFromJSON(jsonFile);
-                } else {
-                    await MigrationTool.migrateFromV1Firebase(projectId, apiKey);
-                }
-
-                showToast('마이그레이션이 완료되었습니다!', 'success');
-                closeMigrationModal();
-            } catch (error) {
-                console.error('마이그레이션 오류:', error);
-                showToast('마이그레이션 중 오류가 발생했습니다', 'error');
-            }
-        }
-
-        // 모달 외부 클릭 시 닫기
         window.onclick = function(event) {
-            const createModal = document.getElementById('createEventModal');
-            const migrationModal = document.getElementById('migrationModal');
-            
-            if (event.target === createModal) {
+            const modal = document.getElementById('createEventModal');
+            if (event.target === modal) {
                 closeCreateEventModal();
-            }
-            if (event.target === migrationModal) {
-                closeMigrationModal();
             }
         };
     </script>
