@@ -179,7 +179,7 @@
 
         .schedule-table {
             width: 100%;
-            min-width: 1200px;
+            min-width: 1400px;
             border-collapse: collapse;
         }
 
@@ -216,13 +216,6 @@
             color: #4338ca;
         }
 
-        .session-title {
-            background: #dbeafe;
-            font-weight: 500;
-            text-align: center;
-            padding: 8px;
-        }
-
         .break-row {
             background: #fef3c7;
             text-align: center;
@@ -230,38 +223,81 @@
             color: #92400e;
         }
 
-        .registration-row {
-            background: #dbeafe;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .luncheon-row {
-            background: #fce7f3;
-            text-align: center;
-            font-weight: 600;
-        }
-
         .time-cell {
             font-weight: 600;
             background: #f9fafb;
             text-align: center;
             white-space: nowrap;
+            min-width: 80px;
         }
 
         .schedule-cell {
             min-height: 60px;
             position: relative;
+            min-width: 200px;
+        }
+
+        .schedule-cell.empty {
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         .schedule-cell.empty:hover {
             background: #f3f4f6;
         }
 
-        .lecture-content {
+        .schedule-cell.drag-over {
+            background: #dbeafe !important;
+            border: 2px dashed #3b82f6 !important;
+        }
+
+        .lecture-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: move;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .lecture-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+
+        .lecture-card.dragging {
+            opacity: 0.5;
+        }
+
+        .lecture-card.sponsored {
+            border: 2px solid #fbbf24;
+        }
+
+        .lecture-card.non-sponsored {
+            border: 2px solid #f87171;
+        }
+
+        .lecture-title {
+            font-weight: 600;
+            margin-bottom: 6px;
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
+        }
+
+        .lecture-meta {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .lecture-sponsor-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-top: 4px;
         }
 
         .items-grid {
@@ -476,22 +512,6 @@
             justify-content: center;
         }
 
-        .crop-container {
-            width: 100%;
-            max-width: 400px;
-            height: 400px;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-        }
-
-        .crop-image {
-            position: absolute;
-            cursor: move;
-        }
-
         .toast-container {
             position: fixed;
             top: 20px;
@@ -582,6 +602,13 @@
             font-weight: 500;
         }
 
+        .empty-slot {
+            color: #9ca3af;
+            font-size: 20px;
+            text-align: center;
+            padding: 20px;
+        }
+
         @media (max-width: 768px) {
             .items-grid {
                 grid-template-columns: 1fr;
@@ -617,7 +644,6 @@
         </nav>
 
         <main class="main-content">
-            <!-- 스케줄 탭 -->
             <div class="tab-content active" id="schedule-tab">
                 <div class="toolbar">
                     <button onclick="addBreak()" class="btn-primary">☕ Break 추가</button>
@@ -630,7 +656,6 @@
                 </div>
             </div>
 
-            <!-- 연자 탭 -->
             <div class="tab-content" id="speakers-tab">
                 <div class="toolbar">
                     <button onclick="showAddSpeakerModal()" class="btn-primary">➕ 연자 추가</button>
@@ -640,7 +665,6 @@
                 <div id="speakersList" class="items-grid"></div>
             </div>
 
-            <!-- 강의 탭 -->
             <div class="tab-content" id="lectures-tab">
                 <div class="toolbar">
                     <button onclick="showAddLectureModal()" class="btn-primary">➕ 강의 추가</button>
@@ -650,7 +674,6 @@
                 <div id="lecturesList" class="items-grid"></div>
             </div>
 
-            <!-- 세션 탭 -->
             <div class="tab-content" id="sessions-tab">
                 <div class="toolbar">
                     <button onclick="showAddSessionModal()" class="btn-primary">➕ 세션 추가</button>
@@ -658,7 +681,6 @@
                 <div id="sessionsList" class="items-grid"></div>
             </div>
 
-            <!-- 설정 탭 -->
             <div class="tab-content" id="settings-tab">
                 <div class="settings-section">
                     <h3>🏢 룸 관리</h3>
@@ -698,7 +720,6 @@
                 </div>
             </div>
 
-            <!-- 내보내기 탭 -->
             <div class="tab-content" id="export-tab">
                 <div style="max-width: 600px; margin: 0 auto;">
                     <div class="settings-section">
@@ -811,6 +832,37 @@
         </div>
     </div>
 
+    <!-- 강의 편집 모달 -->
+    <div id="editScheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>강의 편집</h3>
+                <button class="close-btn" onclick="closeEditScheduleModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>강의</label>
+                    <input type="text" id="editLectureTitle" class="form-control" readonly style="background: #f9fafb;">
+                </div>
+                <div class="form-group">
+                    <label>좌장 (Moderator)</label>
+                    <select id="editChair" class="form-control">
+                        <option value="">선택 안 함</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>비고</label>
+                    <textarea id="editNotes" class="form-control" rows="3" placeholder="추가 정보..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="deleteFromSchedule()" class="btn-danger">삭제</button>
+                <button onclick="closeEditScheduleModal()" class="btn-secondary">취소</button>
+                <button onclick="saveScheduleEdit()" class="btn-primary">저장</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 세션 모달 -->
     <div id="sessionModal" class="modal">
         <div class="modal-content">
@@ -870,7 +922,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
-        // Firebase 설정
         const firebaseConfig = {
             apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
             authDomain: "scheduler2-99724.firebaseapp.com",
@@ -885,14 +936,13 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        // 전역 변수
         let currentUser = null;
         let currentEventId = null;
         let editingId = null;
         let selectedTimeSlot = null;
         let currentPhotoData = null;
         let photoZoom = 1;
-        let photoPosition = { x: 0, y: 0 };
+        let currentEditKey = null;
 
         let eventData = {
             info: {},
@@ -911,7 +961,6 @@
             }
         };
 
-        // Toast
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -924,7 +973,6 @@
             }, 3000);
         }
 
-        // 인증
         firebase.auth().onAuthStateChanged(user => {
             currentUser = user;
             if (!user) {
@@ -934,7 +982,6 @@
             document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
         });
 
-        // 초기화
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             currentEventId = urlParams.get('eventId');
@@ -953,7 +1000,6 @@
             renderSchedule();
         });
 
-        // 데이터 로드
         async function loadEventData() {
             try {
                 const infoSnapshot = await firebase.database()
@@ -975,7 +1021,6 @@
                 eventData.roomsConfig = data.roomsConfig || eventData.roomsConfig;
                 eventData.settings = data.settings || eventData.settings;
 
-                // 시간 슬롯이 없으면 기본 생성
                 if (!eventData.roomsConfig.times || eventData.roomsConfig.times.length === 0) {
                     eventData.roomsConfig.times = generateDefaultTimeSlots();
                     await saveData();
@@ -989,7 +1034,6 @@
             }
         }
 
-        // 기본 시간 슬롯 생성
         function generateDefaultTimeSlots() {
             const slots = [];
             for (let hour = 8; hour <= 18; hour++) {
@@ -1001,7 +1045,6 @@
             return slots;
         }
 
-        // 실시간 동기화
         function setupRealtimeSync() {
             const dataRef = firebase.database().ref(`/events/${currentEventId}/data`);
             
@@ -1022,7 +1065,6 @@
             });
         }
 
-        // 데이터 저장
         async function saveData() {
             try {
                 document.getElementById('syncText').textContent = '저장 중...';
@@ -1046,7 +1088,6 @@
             }
         }
 
-        // 탭 전환
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tabName);
@@ -1063,7 +1104,6 @@
             if (tabName === 'settings') renderSettings();
         }
 
-        // 스케줄 렌더링 (엑셀 스타일)
         function renderSchedule() {
             const grid = document.getElementById('scheduleGrid');
             const rooms = eventData.roomsConfig.rooms || ['Room A'];
@@ -1072,20 +1112,17 @@
 
             let html = '<table class="schedule-table">';
             
-            // 헤더 - 룸명
             html += '<tr>';
             html += `<th colspan="${columns.length}" class="room-header">${rooms[0]}</th>`;
             html += '</tr>';
             
-            // 컬럼 헤더
             html += '<tr>';
             columns.forEach(col => {
                 html += `<th>${col}</th>`;
             });
             html += '</tr>';
 
-            // 시간별 행
-            times.forEach((time, index) => {
+            times.forEach((time) => {
                 const key = `${time}-${rooms[0]}`;
                 const item = eventData.schedule[key];
                 
@@ -1105,9 +1142,24 @@
                         const speaker = lecture ? eventData.speakers[lecture.speakerId] : null;
                         const chair = item.chairId ? eventData.speakers[item.chairId] : null;
                         
-                        html += `<tr ondblclick="removeFromSchedule('${key}')">`;
+                        const cardClass = lecture?.isNonSponsored ? 'non-sponsored' : 
+                                        (lecture?.sponsorCompany ? 'sponsored' : '');
+                        
+                        html += `<tr>`;
                         html += `<td class="time-cell">${time}</td>`;
-                        html += `<td class="lecture-content">${lecture?.title || ''}</td>`;
+                        html += `<td>
+                            <div class="lecture-card ${cardClass}" 
+                                 draggable="true" 
+                                 data-key="${key}"
+                                 ondragstart="handleDragStart(event)"
+                                 ondragend="handleDragEnd(event)"
+                                 ondblclick="openEditScheduleModal('${key}')">
+                                <div class="lecture-title">${lecture?.title || ''}</div>
+                                <div class="lecture-meta">⏱️ ${lecture?.duration || 20}분</div>
+                                ${lecture?.isNonSponsored ? '<span class="lecture-sponsor-badge">⚠️ 비스폰</span>' : ''}
+                                ${lecture?.sponsorCompany ? `<span class="lecture-sponsor-badge">🏢 ${lecture.sponsorCompany}</span>` : ''}
+                            </div>
+                        </td>`;
                         html += `<td>${speaker?.name || ''}</td>`;
                         html += `<td>${chair?.name || ''}</td>`;
                         html += `<td>${lecture?.productName || ''}</td>`;
@@ -1117,7 +1169,15 @@
                 } else {
                     html += `<tr>`;
                     html += `<td class="time-cell">${time}</td>`;
-                    html += `<td class="schedule-cell empty" onclick="openLectureSelector('${time}', '${rooms[0]}')">+</td>`;
+                    html += `<td class="schedule-cell empty" 
+                                 data-time="${time}" 
+                                 data-room="${rooms[0]}"
+                                 ondrop="handleDrop(event)"
+                                 ondragover="handleDragOver(event)"
+                                 ondragleave="handleDragLeave(event)"
+                                 onclick="openLectureSelector('${time}', '${rooms[0]}')">
+                        <div class="empty-slot">+</div>
+                    </td>`;
                     html += `<td></td><td></td><td></td><td></td>`;
                     html += '</tr>';
                 }
@@ -1127,7 +1187,110 @@
             grid.innerHTML = html;
         }
 
-        // 강의 선택 모달
+        // 드래그앤드롭 핸들러
+        let draggedKey = null;
+
+        function handleDragStart(e) {
+            draggedKey = e.target.dataset.key;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedKey) return;
+            
+            const newTime = e.currentTarget.dataset.time;
+            const newRoom = e.currentTarget.dataset.room;
+            const newKey = `${newTime}-${newRoom}`;
+            
+            if (draggedKey === newKey) return;
+            
+            // 이동
+            const item = eventData.schedule[draggedKey];
+            delete eventData.schedule[draggedKey];
+            eventData.schedule[newKey] = item;
+            
+            await saveData();
+            renderSchedule();
+            showToast('강의가 이동되었습니다', 'success');
+            
+            draggedKey = null;
+        }
+
+        // 편집 모달
+        function openEditScheduleModal(key) {
+            currentEditKey = key;
+            const item = eventData.schedule[key];
+            if (!item || item.type !== 'lecture') return;
+            
+            const lecture = eventData.lectures[item.lectureId];
+            
+            document.getElementById('editLectureTitle').value = lecture?.title || '';
+            
+            const chairSelect = document.getElementById('editChair');
+            chairSelect.innerHTML = '<option value="">선택 안 함</option>';
+            Object.entries(eventData.speakers).forEach(([id, speaker]) => {
+                const selected = id === item.chairId ? 'selected' : '';
+                chairSelect.innerHTML += `<option value="${id}" ${selected}>${speaker.name}</option>`;
+            });
+            
+            document.getElementById('editNotes').value = item.notes || '';
+            
+            document.getElementById('editScheduleModal').classList.add('active');
+        }
+
+        function closeEditScheduleModal() {
+            document.getElementById('editScheduleModal').classList.remove('active');
+            currentEditKey = null;
+        }
+
+        async function saveScheduleEdit() {
+            if (!currentEditKey) return;
+            
+            const chairId = document.getElementById('editChair').value;
+            const notes = document.getElementById('editNotes').value;
+            
+            eventData.schedule[currentEditKey].chairId = chairId || null;
+            eventData.schedule[currentEditKey].notes = notes || '';
+            
+            await saveData();
+            closeEditScheduleModal();
+            renderSchedule();
+            showToast('수정되었습니다', 'success');
+        }
+
+        async function deleteFromSchedule() {
+            if (!currentEditKey) return;
+            
+            if (confirm('이 강의를 스케줄에서 제거하시겠습니까?')) {
+                delete eventData.schedule[currentEditKey];
+                await saveData();
+                closeEditScheduleModal();
+                renderSchedule();
+                showToast('삭제되었습니다', 'success');
+            }
+        }
+
+        // 나머지 함수들은 이전과 동일...
+        // (강의 선택 모달, 연자 관리, 강의 관리, 세션 관리, 설정, 내보내기 등)
+        
         function openLectureSelector(time, room) {
             selectedTimeSlot = { time, room };
             const modal = document.getElementById('lectureSelectorModal');
@@ -1162,6 +1325,8 @@
                 eventData.schedule[key] = {
                     type: 'lecture',
                     lectureId: lectureId,
+                    chairId: null,
+                    notes: '',
                     placedAt: Date.now()
                 };
                 await saveData();
@@ -1178,15 +1343,6 @@
             });
         }
 
-        async function removeFromSchedule(key) {
-            if (confirm('이 항목을 제거하시겠습니까?')) {
-                delete eventData.schedule[key];
-                await saveData();
-                renderSchedule();
-            }
-        }
-
-        // Break 추가
         async function addBreak() {
             const time = prompt('Break 시작 시간 (예: 11:00):');
             if (!time) return;
@@ -1206,12 +1362,10 @@
             renderSchedule();
         }
 
-        // 세션 헤더 추가
-        async function addSessionHeader() {
+        function addSessionHeader() {
             showAddSessionModal();
         }
 
-        // 연자 관리
         function renderSpeakers() {
             const list = document.getElementById('speakersList');
             const speakers = Object.entries(eventData.speakers);
@@ -1265,7 +1419,6 @@
             reader.onload = (e) => {
                 currentPhotoData = e.target.result;
                 photoZoom = 1;
-                photoPosition = { x: 0, y: 0 };
                 displayPhoto();
                 document.getElementById('photoControls').style.display = 'flex';
             };
@@ -1274,7 +1427,7 @@
 
         function displayPhoto() {
             const preview = document.getElementById('photoPreview');
-            preview.innerHTML = `<img src="${currentPhotoData}" style="transform: scale(${photoZoom}) translate(${photoPosition.x}px, ${photoPosition.y}px); width: 100%; height: auto;">`;
+            preview.innerHTML = `<img src="${currentPhotoData}" style="transform: scale(${photoZoom}); width: 100%; height: auto;">`;
         }
 
         function zoomPhoto(factor) {
@@ -1350,7 +1503,6 @@
             });
         }
 
-        // 강의 관리
         function renderLectures() {
             const list = document.getElementById('lecturesList');
             const lectures = Object.entries(eventData.lectures);
@@ -1461,7 +1613,6 @@
         async function deleteLecture(id) {
             if (!confirm('이 강의를 삭제하시겠습니까?')) return;
             
-            // 스케줄에서도 제거
             for (const key in eventData.schedule) {
                 if (eventData.schedule[key].lectureId === id) {
                     delete eventData.schedule[key];
@@ -1482,7 +1633,6 @@
             });
         }
 
-        // 세션 관리
         function renderSessions() {
             const list = document.getElementById('sessionsList');
             const sessions = Object.entries(eventData.sessions);
@@ -1563,7 +1713,6 @@
             const id = editingId || `session_${Date.now()}`;
             eventData.sessions[id] = sessionData;
             
-            // 스케줄에 세션 헤더 추가
             const room = eventData.roomsConfig.rooms[0];
             const key = `${time}-${room}`;
             eventData.schedule[key] = {
@@ -1587,7 +1736,6 @@
             showToast('세션이 삭제되었습니다', 'success');
         }
 
-        // 설정 관리
         function renderSettings() {
             const roomsList = document.getElementById('roomsList');
             const rooms = eventData.roomsConfig.rooms || [];
@@ -1674,7 +1822,6 @@
             loadEventData();
         }
 
-        // 내보내기
         function exportToExcel() {
             try {
                 const wb = XLSX.utils.book_new();
