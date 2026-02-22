@@ -21,19 +21,16 @@
             </div>
         </header>
 
-        <!-- 로그인 화면 -->
         <div id="loginScreen" class="login-screen">
             <div class="login-box">
                 <h2>🔐 로그인</h2>
                 <p>Google 계정으로 로그인하여 행사를 관리하세요</p>
                 <button onclick="signInWithGoogle()" class="btn-primary btn-large">
-                    <img src="https://www.google.com/favicon.ico" alt="Google" style="width: 20px; margin-right: 10px;">
                     Google로 로그인
                 </button>
             </div>
         </div>
 
-        <!-- 행사 목록 화면 -->
         <div id="lobbyScreen" class="lobby-screen" style="display: none;">
             <div class="lobby-toolbar">
                 <h2>내 행사 목록</h2>
@@ -42,9 +39,7 @@
                 </button>
             </div>
 
-            <div id="eventsContainer" class="events-grid">
-                <!-- 행사 카드가 여기에 동적으로 추가됨 -->
-            </div>
+            <div id="eventsContainer" class="events-grid"></div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
                 <div class="empty-icon">📋</div>
@@ -57,7 +52,6 @@
         </div>
     </div>
 
-    <!-- 새 행사 만들기 모달 -->
     <div id="createEventModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -75,23 +69,20 @@
                     <label>국가/지역 *</label>
                     <select id="eventCountry" class="form-control">
                         <option value="">선택하세요</option>
-                        <option value="KR">🇰🇷 대한민국 (South Korea)</option>
-                        <option value="JP">🇯🇵 일본 (Japan)</option>
-                        <option value="TH">🇹🇭 태국 (Thailand)</option>
-                        <option value="ID">🇮🇩 인도네시아 (Indonesia)</option>
-                        <option value="VN">🇻🇳 베트남 (Vietnam)</option>
-                        <option value="SG">🇸🇬 싱가포르 (Singapore)</option>
+                        <option value="KR">🇰🇷 대한민국</option>
+                        <option value="JP">🇯🇵 일본</option>
+                        <option value="TH">🇹🇭 태국</option>
+                        <option value="ID">🇮🇩 인도네시아</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>시간대 (TimeZone) *</label>
+                    <label>시간대 *</label>
                     <select id="eventTimezone" class="form-control">
                         <option value="">선택하세요</option>
                         <option value="Asia/Seoul">Asia/Seoul (KST, UTC+9)</option>
                         <option value="Asia/Tokyo">Asia/Tokyo (JST, UTC+9)</option>
                         <option value="Asia/Bangkok">Asia/Bangkok (ICT, UTC+7)</option>
-                        <option value="Asia/Jakarta">Asia/Jakarta (WIB, UTC+7)</option>
                     </select>
                 </div>
 
@@ -100,104 +91,72 @@
                     <select id="eventType" class="form-control">
                         <option value="conference">학술대회 (Conference)</option>
                         <option value="workshop">워크샵 (Workshop)</option>
-                        <option value="symposium">심포지엄 (Symposium)</option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button onclick="closeCreateEventModal()" class="btn-secondary">취소</button>
-                <button onclick="createEvent()" class="btn-primary">생성하기</button>
+                <button onclick="createEventHandler()" class="btn-primary">생성하기</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast 알림 -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- V2 Configuration -->
-<script>
-    // Firebase V2 Configuration
-    const firebaseConfigV2 = {
-        apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
-        authDomain: "scheduler2-99724.firebaseapp.com",
-        databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "scheduler2-99724",
-        storageBucket: "scheduler2-99724.firebasestorage.app",
-        messagingSenderId: "1023522399376",
-        appId: "1:1023522399376:web:201a526635a7058917e415"
-    };
-
-    // Firebase 초기화
-    function initializeFirebase() {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfigV2);
-            console.log('[Firebase] V2 초기화 완료');
-        }
-    }
-
-    // Firebase Database 참조 헬퍼
-    const FirebaseRefs = {
-        eventInfo(eventId) {
-            return firebase.database().ref(`/events/${eventId}/info`);
-        },
-        eventData(eventId) {
-            return firebase.database().ref(`/events/${eventId}/data`);
-        },
-        userEvents(userId) {
-            return firebase.database().ref(`/users/${userId}/events`);
-        }
-    };
-</script>
-    <script src="config/timezones.js"></script>
-
-    <!-- Core Scripts -->
-    <script src="js/ui/toast.js"></script>
-    <script src="js/features/lobby.js"></script>
-
     <script>
-        // 앱 초기화
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+            authDomain: "scheduler2-99724.firebaseapp.com",
+            databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scheduler2-99724",
+            storageBucket: "scheduler2-99724.firebasestorage.app",
+            messagingSenderId: "1023522399376",
+            appId: "1:1023522399376:web:201a526635a7058917e415"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        console.log('[Firebase] 초기화 완료');
+
+        // Toast function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = 'background: white; padding: 16px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Auth
         let currentUser = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initializeFirebase();
-            initializeAuth();
+        firebase.auth().onAuthStateChanged(user => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('lobbyScreen').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('userName').textContent = user.displayName || user.email;
+                document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
+                loadUserEvents();
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('lobbyScreen').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'none';
+            }
         });
-
-        function initializeAuth() {
-            firebase.auth().onAuthStateChanged(user => {
-                currentUser = user;
-                
-                if (user) {
-                    // 로그인됨
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('lobbyScreen').style.display = 'block';
-                    document.getElementById('userInfo').style.display = 'flex';
-                    
-                    document.getElementById('userName').textContent = user.displayName || user.email;
-                    document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
-                    
-                    // 행사 목록 로드
-                    EventLobby.loadUserEvents();
-                } else {
-                    // 로그아웃됨
-                    document.getElementById('loginScreen').style.display = 'flex';
-                    document.getElementById('lobbyScreen').style.display = 'none';
-                    document.getElementById('userInfo').style.display = 'none';
-                }
-            });
-        }
 
         function signInWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider)
-                .catch(error => {
-                    showToast('로그인 실패: ' + error.message, 'error');
-                });
+                .catch(error => showToast('로그인 실패: ' + error.message, 'error'));
         }
 
         function signOut() {
@@ -215,27 +174,46 @@
             document.getElementById('eventTimezone').value = '';
         }
 
-        async function createEvent() {
+        async function createEventHandler() {
             const name = document.getElementById('eventName').value.trim();
             const country = document.getElementById('eventCountry').value;
             const timezone = document.getElementById('eventTimezone').value;
             const type = document.getElementById('eventType').value;
 
             if (!name || !country || !timezone) {
-                showToast('필수 항목을 모두 입력해주세요', 'warning');
+                showToast('필수 항목을 모두 입력해주세요', 'error');
+                return;
+            }
+
+            if (!currentUser) {
+                showToast('로그인이 필요합니다', 'error');
                 return;
             }
 
             try {
-                const eventId = await EventLobby.createNewEvent({
-                    name, country, timezone, type
-                });
+                const eventId = 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const eventInfo = {
+                    name, country, timezone, type,
+                    createdAt: Date.now(),
+                    createdBy: currentUser.uid,
+                    owner: currentUser.email
+                };
 
+                const updates = {};
+                updates[`/events/${eventId}/info`] = eventInfo;
+                updates[`/events/${eventId}/data`] = {
+                    speakers: {}, lectures: {}, schedule: {},
+                    sessions: [], chairs: {}, sponsors: [], roomsConfig: {}
+                };
+                updates[`/users/${currentUser.uid}/events/${eventId}`] = { ...eventInfo, role: 'owner' };
+
+                await firebase.database().ref().update(updates);
+                
                 showToast('행사가 생성되었습니다!', 'success');
                 closeCreateEventModal();
-
+                
                 setTimeout(() => {
-                    EventLobby.switchToEvent(eventId);
+                    window.location.href = `scheduler.html?eventId=${eventId}`;
                 }, 1000);
             } catch (error) {
                 console.error('행사 생성 오류:', error);
@@ -243,11 +221,48 @@
             }
         }
 
+        async function loadUserEvents() {
+            if (!currentUser) return;
+            
+            const eventsRef = firebase.database().ref(`/users/${currentUser.uid}/events`);
+            const snapshot = await eventsRef.once('value');
+            const eventsData = snapshot.val() || {};
+            
+            const events = Object.entries(eventsData).map(([id, data]) => ({ id, ...data }));
+            events.sort((a, b) => (b.lastAccessed || b.createdAt || 0) - (a.lastAccessed || a.createdAt || 0));
+            
+            renderEventsList(events);
+        }
+
+        function renderEventsList(events) {
+            const container = document.getElementById('eventsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (events.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'flex';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            container.innerHTML = events.map(event => `
+                <div class="event-card" onclick="goToEvent('${event.id}')">
+                    <h3>${event.name}</h3>
+                    <p>${event.country} · ${event.timezone}</p>
+                    <small>${new Date(event.createdAt).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+        }
+
+        async function goToEvent(eventId) {
+            if (!currentUser) return;
+            await firebase.database().ref(`/users/${currentUser.uid}/events/${eventId}/lastAccessed`).set(Date.now());
+            window.location.href = `scheduler.html?eventId=${eventId}`;
+        }
+
         window.onclick = function(event) {
             const modal = document.getElementById('createEventModal');
-            if (event.target === modal) {
-                closeCreateEventModal();
-            }
+            if (event.target === modal) closeCreateEventModal();
         };
     </script>
 </body>
