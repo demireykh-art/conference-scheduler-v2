@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Scheduler V3</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg-gray: #f9fafb;
+            --border-gray: #e5e7eb;
+            --text-dark: #111827;
+            --text-gray: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: #f5f5f7;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-gray);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-left h1 { font-size: 20px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+
+        .sync-status {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .sync-status.syncing .sync-dot {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-gray); color: var(--text-dark); }
+        .btn-secondary:hover:not(:disabled) { background: var(--border-gray); }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-icon { padding: 8px 12px; background: rgba(255,255,255,0.2); color: white; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+
+        .tab-nav {
+            background: white;
+            border-bottom: 1px solid var(--border-gray);
+            display: flex;
+            padding: 0 24px;
+            overflow-x: auto;
+            position: sticky;
+            top: 68px;
+            z-index: 90;
+        }
+
+        .tab-btn {
+            padding: 16px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-gray);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .main-content {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .toolbar {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .schedule-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .schedule-table {
+            width: 100%;
+            min-width: 1400px;
+            border-collapse: collapse;
+        }
+
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid var(--border-gray);
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .schedule-table th {
+            background: var(--bg-gray);
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .time-cell {
+            font-weight: 600;
+            background: var(--bg-gray);
+            text-align: center;
+            white-space: nowrap;
+            min-width: 120px;
+            font-size: 14px;
+        }
+
+        .schedule-cell {
+            min-height: 60px;
+            position: relative;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .schedule-cell.empty { cursor: pointer; }
+        .schedule-cell.empty:hover { background: var(--bg-gray); }
+        .schedule-cell.drag-over {
+            background: #dbeafe !important;
+            border: 2px dashed var(--info) !important;
+        }
+
+        .lecture-content {
+            padding: 8px;
+            cursor: move;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .lecture-content:hover {
+            background: var(--bg-gray);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .lecture-content.dragging { opacity: 0.5; }
+        .lecture-content.conflict {
+            border-color: var(--error) !important;
+            background: #fef2f2 !important;
+        }
+
+        .lecture-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .speaker-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .speaker-photo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-gray);
+            flex-shrink: 0;
+        }
+
+        .speaker-photo.placeholder {
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .speaker-name {
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .conflict-badge {
+            display: inline-block;
+            background: var(--error);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .session-header {
+            background: #e0e7ff;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px;
+            color: #4338ca;
+            cursor: move;
+        }
+
+        .break-row {
+            background: #fef3c7;
+            text-align: center;
+            font-weight: 600;
+            color: #92400e;
+            font-size: 16px;
+            cursor: move;
+        }
+
+        .empty-slot {
+            color: var(--text-gray);
+            text-align: center;
+            padding: 20px;
+            font-size: 20px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .item-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .item-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+        .speaker-card {
+            display: flex;
+            gap: 16px;
+        }
+
+        .speaker-card .speaker-photo {
+            width: 80px;
+            height: 80px;
+            border: 3px solid var(--border-gray);
+        }
+
+        .speaker-card .speaker-photo.placeholder {
+            font-size: 32px;
+        }
+
+        .speaker-info-detail { flex: 1; }
+
+        .speaker-name-large {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-dark);
+        }
+
+        .speaker-detail {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 2px;
+        }
+
+        .item-card h4 {
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+
+        .item-card p {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 4px;
+        }
+
+        .item-card .actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+        .toast.info { border-left: 4px solid var(--info); }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-gray);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover { background: var(--bg-gray); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .photo-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--primary);
+            background: var(--bg-gray);
+        }
+
+        .photo-preview {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+
+        .settings-section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .settings-section h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-gray);
+            padding-bottom: 12px;
+        }
+
+        .room-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .room-name { flex: 1; font-weight: 500; }
+
+        .conflict-list {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .conflict-item {
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--error);
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-left">
+            <button class="btn-icon" data-action="goHome">🏠</button>
+            <h1 id="eventTitle">Conference Scheduler V3</h1>
+        </div>
+        <div class="header-right">
+            <div class="sync-status" id="syncStatus">
+                <span class="sync-dot"></span>
+                <span id="syncText">저장됨</span>
+            </div>
+            <div class="user-info">
+                <img id="userAvatar" class="avatar" alt="User">
+                <button class="btn btn-secondary btn-small" data-action="logout">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="tab-nav" id="tabNav">
+        <button class="tab-btn active" data-tab="schedule">📅 스케줄</button>
+        <button class="tab-btn" data-tab="speakers">👥 연자</button>
+        <button class="tab-btn" data-tab="lectures">📚 강의</button>
+        <button class="tab-btn" data-tab="sessions">🎯 세션</button>
+        <button class="tab-btn" data-tab="settings">⚙️ 설정</button>
+    </nav>
+
+    <main class="main-content">
+        <div class="tab-content active" id="schedule-tab">
+            <div class="toolbar">
+                <button class="btn btn-secondary btn-small" data-action="undo" disabled>↩️ 되돌리기 (0)</button>
+                <button class="btn btn-primary" data-action="addBreak">☕ Break 추가</button>
+                <button class="btn btn-primary" data-action="addSession">📋 세션 추가</button>
+                <button class="btn btn-secondary" data-action="checkConflicts">🔍 중복 검사</button>
+            </div>
+            
+            <div id="conflictAlert" class="conflict-list" style="display: none;">
+                <h4 style="margin-bottom: 12px; color: #dc2626;">⚠️ 연자 중복 발견</h4>
+                <div id="conflictItems"></div>
+            </div>
+            
+            <div class="schedule-container">
+                <div id="scheduleGrid"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="speakers-tab">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-action="addSpeaker">➕ 연자 추가</button>
+            </div>
+            <div id="speakersList" class="items-grid"></div>
+        </div>
+
+        <div class="tab-content" id="lectures-tab">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-action="addLecture">➕ 강의 추가</button>
+            </div>
+            <div id="lecturesList" class="items-grid"></div>
+        </div>
+
+        <div class="tab-content" id="sessions-tab">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-action="addSessionManual">➕ 세션 추가</button>
+            </div>
+            <div id="sessionsList" class="items-grid"></div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="settings-section">
+                <h3>🏢 룸 관리</h3>
+                <div id="roomsList"></div>
+                <button class="btn btn-primary" data-action="addRoom" style="margin-top: 16px;">➕ 룸 추가</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>⏰ 시간 설정</h3>
+                <div class="form-group">
+                    <label>시작 시간</label>
+                    <input type="time" id="settingStartTime" class="form-control" value="08:00">
+                </div>
+                <div class="form-group">
+                    <label>종료 시간</label>
+                    <input type="time" id="settingEndTime" class="form-control" value="18:00">
+                </div>
+                <div class="form-group">
+                    <label>시간 간격 (분)</label>
+                    <select id="settingTimeInterval" class="form-control">
+                        <option value="10">10분</option>
+                        <option value="15">15분</option>
+                        <option value="20" selected>20분</option>
+                        <option value="30">30분</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" data-action="generateTimeSlots">⚡ 시간 슬롯 생성</button>
+            </div>
+
+            <div class="settings-section">
+                <h3>📊 기본 설정</h3>
+                <div class="form-group">
+                    <label>기본 발표 시간 (분)</label>
+                    <input type="number" id="settingDefaultDuration" class="form-control" value="20" min="5" max="120">
+                </div>
+                <div class="form-group">
+                    <label>이동 버퍼 시간 (분)</label>
+                    <input type="number" id="settingBufferTime" class="form-control" value="10" min="0" max="30">
+                </div>
+                <button class="btn btn-primary" data-action="saveSettings">💾 설정 저장</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 모달들 -->
+    <div id="speakerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="speakerModalTitle">연자 추가</h3>
+                <button class="close-btn" data-action="closeSpeakerModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>사진</label>
+                    <div class="photo-upload-area" id="photoUploadArea">
+                        <div id="photoPreview">
+                            <p>📷 클릭하여 사진 업로드</p>
+                            <small>권장 크기: 400x400px</small>
+                        </div>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="form-group">
+                    <label>이름 *</label>
+                    <input type="text" id="speakerName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>소속</label>
+                    <input type="text" id="speakerAffiliation" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>이메일</label>
+                    <input type="email" id="speakerEmail" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="closeSpeakerModal">취소</button>
+                <button class="btn btn-primary" data-action="saveSpeaker">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lectureModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="lectureModalTitle">강의 추가</h3>
+                <button class="close-btn" data-action="closeLectureModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>강의 제목 *</label>
+                    <input type="text" id="lectureTitle" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>연자 *</label>
+                    <select id="lectureSpeaker" class="form-control">
+                        <option value="">연자 선택</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>발표 시간 (분)</label>
+                    <input type="number" id="lectureDuration" class="form-control" value="20" min="5">
+                </div>
+                <div class="form-group">
+                    <label>스폰서 회사</label>
+                    <input type="text" id="lectureSponsor" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>제품명</label>
+                    <input type="text" id="lectureProduct" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="closeLectureModal">취소</button>
+                <button class="btn btn-primary" data-action="saveLecture">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="sessionModalTitle">세션 추가</h3>
+                <button class="close-btn" data-action="closeSessionModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>세션명 *</label>
+                    <input type="text" id="sessionName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>좌장</label>
+                    <select id="sessionChair" class="form-control">
+                        <option value="">선택 안 함</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>시작 시간</label>
+                    <input type="time" id="sessionTime" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="closeSessionModal">취소</button>
+                <button class="btn btn-primary" data-action="saveSession">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="breakModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Break 추가</h3>
+                <button class="close-btn" data-action="closeBreakModal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>시작 시간 *</label>
+                    <input type="time" id="breakTime" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>지속 시간 (분) *</label>
+                    <input type="number" id="breakDuration" class="form-control" value="30" min="10">
+                </div>
+                <div class="form-group">
+                    <label>제목 *</label>
+                    <input type="text" id="breakTitle" class="form-control" value="Coffee Break">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="closeBreakModal">취소</button>
+                <button class="btn btn-primary" data-action="saveBreak">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lectureSelectorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>강의 선택</h3>
+                <button class="close-btn" data-action="closeLectureSelector">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="lectureSelectorList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+            authDomain: "scheduler2-99724.firebaseapp.com",
+            databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "scheduler2-99724",
+            storageBucket: "scheduler2-99724.firebasestorage.app",
+            messagingSenderId: "1023522399376",
+            appId: "1:1023522399376:web:201a526635a7058917e415"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const App = {
+            user: null,
+            eventId: null,
+            eventData: {
+                info: {},
+                speakers: {},
+                lectures: {},
+                sessions: {},
+                schedule: {},
+                settings: {
+                    rooms: [],
+                    timeSlots: [],
+                    defaultDuration: 20,
+                    bufferTime: 10
+                }
+            },
+            undoStack: [],
+            maxUndo: 20,
+            editingId: null,
+            currentPhotoData: null,
+            selectedSlot: null,
+            draggedKey: null,
+            
+            async init() {
+                this.showLoading(true);
+                
+                const params = new URLSearchParams(window.location.search);
+                this.eventId = params.get('eventId');
+                
+                if (!this.eventId) {
+                    Toast.error('행사 ID가 없습니다');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                    return;
+                }
+                
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    if (!user) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    
+                    this.user = user;
+                    document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
+                    
+                    await this.loadEventData();
+                    this.setupEventListeners();
+                    this.setupRealtimeSync();
+                    this.render();
+                    
+                    this.showLoading(false);
+                });
+            },
+            
+            async loadEventData() {
+                try {
+                    const infoSnapshot = await firebase.database()
+                        .ref(`/events/${this.eventId}/info`)
+                        .once('value');
+                    this.eventData.info = infoSnapshot.val() || {};
+                    
+                    document.getElementById('eventTitle').textContent = this.eventData.info.name || 'Conference Scheduler';
+                    
+                    const dataSnapshot = await firebase.database()
+                        .ref(`/events/${this.eventId}/data`)
+                        .once('value');
+                    const data = dataSnapshot.val() || {};
+                    
+                    this.eventData.speakers = data.speakers || {};
+                    this.eventData.lectures = data.lectures || {};
+                    this.eventData.sessions = data.sessions || {};
+                    this.eventData.schedule = data.schedule || {};
+                    this.eventData.settings = data.settings || this.eventData.settings;
+                    
+                    if (!this.eventData.settings.timeSlots || this.eventData.settings.timeSlots.length === 0) {
+                        this.eventData.settings.timeSlots = this.generateDefaultTimeSlots();
+                        await this.saveData();
+                    }
+                    
+                    Toast.success('데이터를 불러왔습니다');
+                } catch (error) {
+                    console.error('데이터 로딩 실패:', error);
+                    Toast.error('데이터 로딩 중 오류가 발생했습니다');
+                }
+            },
+            
+            generateDefaultTimeSlots() {
+                const slots = [];
+                for (let hour = 8; hour <= 18; hour++) {
+                    for (let min = 0; min < 60; min += 20) {
+                        slots.push(`${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`);
+                    }
+                }
+                return slots;
+            },
+            
+            setupRealtimeSync() {
+                const dataRef = firebase.database().ref(`/events/${this.eventId}/data`);
+                
+                dataRef.on('value', (snapshot) => {
+                    const data = snapshot.val() || {};
+                    this.eventData.speakers = data.speakers || {};
+                    this.eventData.lectures = data.lectures || {};
+                    this.eventData.sessions = data.sessions || {};
+                    this.eventData.schedule = data.schedule || {};
+                    this.eventData.settings = data.settings || this.eventData.settings;
+                    
+                    this.render();
+                    this.updateSyncStatus('synced');
+                });
+            },
+            
+            async saveData() {
+                try {
+                    this.updateSyncStatus('syncing');
+                    
+                    await firebase.database()
+                        .ref(`/events/${this.eventId}/data`)
+                        .set({
+                            speakers: this.eventData.speakers,
+                            lectures: this.eventData.lectures,
+                            sessions: this.eventData.sessions,
+                            schedule: this.eventData.schedule,
+                            settings: this.eventData.settings
+                        });
+                    
+                    this.updateSyncStatus('synced');
+                } catch (error) {
+                    console.error('저장 실패:', error);
+                    this.updateSyncStatus('error');
+                    Toast.error('저장 중 오류가 발생했습니다');
+                }
+            },
+            
+            saveToHistory() {
+                const snapshot = JSON.parse(JSON.stringify(this.eventData.schedule));
+                this.undoStack.push(snapshot);
+                
+                if (this.undoStack.length > this.maxUndo) {
+                    this.undoStack.shift();
+                }
+                
+                this.updateUndoButton();
+            },
+            
+            performUndo() {
+                if (this.undoStack.length === 0) {
+                    Toast.info('되돌릴 작업이 없습니다');
+                    return;
+                }
+                
+                const previousState = this.undoStack.pop();
+                this.eventData.schedule = JSON.parse(JSON.stringify(previousState));
+                
+                this.saveData();
+                this.render();
+                this.updateUndoButton();
+                Toast.info('이전 상태로 되돌렸습니다');
+            },
+            
+            updateUndoButton() {
+                const btn = document.querySelector('[data-action="undo"]');
+                if (btn) {
+                    btn.disabled = this.undoStack.length === 0;
+                    btn.textContent = `↩️ 되돌리기 (${this.undoStack.length})`;
+                }
+            },
+            
+            updateSyncStatus(status) {
+                const statusEl = document.getElementById('syncStatus');
+                const textEl = document.getElementById('syncText');
+                
+                statusEl.className = 'sync-status';
+                
+                if (status === 'syncing') {
+                    statusEl.classList.add('syncing');
+                    textEl.textContent = '저장 중...';
+                } else if (status === 'synced') {
+                    textEl.textContent = '저장됨';
+                } else if (status === 'error') {
+                    textEl.textContent = '오류';
+                }
+            },
+            
+            showLoading(show) {
+                const overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            },
+            
+            setupEventListeners() {
+                // 이벤트 위임
+                document.addEventListener('click', (e) => {
+                    const target = e.target.closest('[data-action]');
+                    if (!target) return;
+                    
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    this.handleAction(action, id, e, target);
+                });
+                
+                // 탭 전환
+                document.getElementById('tabNav').addEventListener('click', (e) => {
+                    const target = e.target.closest('.tab-btn');
+                    if (!target) return;
+                    
+                    this.switchTab(target.dataset.tab);
+                });
+                
+                // 드래그앤드롭
+                document.addEventListener('dragstart', (e) => {
+                    if (e.target.dataset.draggable) {
+                        this.draggedKey = e.target.dataset.key;
+                        e.target.classList.add('dragging');
+                    }
+                });
+                
+                document.addEventListener('dragend', (e) => {
+                    if (e.target.dataset.draggable) {
+                        e.target.classList.remove('dragging');
+                    }
+                });
+                
+                document.addEventListener('dragover', (e) => {
+                    const cell = e.target.closest('.schedule-cell.empty');
+                    if (cell && this.draggedKey) {
+                        e.preventDefault();
+                        cell.classList.add('drag-over');
+                    }
+                });
+                
+                document.addEventListener('dragleave', (e) => {
+                    const cell = e.target.closest('.schedule-cell');
+                    if (cell) {
+                        cell.classList.remove('drag-over');
+                    }
+                });
+                
+                document.addEventListener('drop', async (e) => {
+                    const cell = e.target.closest('.schedule-cell.empty');
+                    if (cell && this.draggedKey) {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        
+                        const time = cell.dataset.time;
+                        const room = cell.dataset.room;
+                        const newKey = `${time}-${room}`;
+                        
+                        if (this.draggedKey !== newKey) {
+                            this.saveToHistory();
+                            
+                            const item = this.eventData.schedule[this.draggedKey];
+                            delete this.eventData.schedule[this.draggedKey];
+                            this.eventData.schedule[newKey] = { ...item, time };
+                            
+                            await this.saveData();
+                            Toast.success('이동되었습니다');
+                        }
+                        
+                        this.draggedKey = null;
+                    }
+                });
+                
+                // Ctrl+Z
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault();
+                        this.performUndo();
+                    }
+                });
+                
+                // 사진 업로드
+                document.getElementById('photoUploadArea').addEventListener('click', () => {
+                    document.getElementById('photoInput').click();
+                });
+                
+                document.getElementById('photoInput').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.currentPhotoData = e.target.result;
+                            document.getElementById('photoPreview').innerHTML = `<img src="${e.target.result}" style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px;">`;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            },
+            
+            handleAction(action, id, event, target) {
+                const actions = {
+                    'goHome': () => window.location.href = 'index.html',
+                    'logout': () => firebase.auth().signOut(),
+                    'undo': () => this.performUndo(),
+                    'addBreak': () => this.openBreakModal(),
+                    'addSession': () => this.openSessionModal(),
+                    'addSessionManual': () => this.openSessionModal(),
+                    'checkConflicts': () => this.checkAllConflicts(),
+                    'addSpeaker': () => this.openSpeakerModal(),
+                    'addLecture': () => this.openLectureModal(),
+                    'editSpeaker': () => this.editSpeaker(id),
+                    'deleteSpeaker': () => this.deleteSpeaker(id),
+                    'editLecture': () => this.editLecture(id),
+                    'deleteLecture': () => this.deleteLecture(id),
+                    'editSession': () => this.editSession(id),
+                    'deleteSession': () => this.deleteSession(id),
+                    'closeSpeakerModal': () => this.closeSpeakerModal(),
+                    'closeLectureModal': () => this.closeLectureModal(),
+                    'closeSessionModal': () => this.closeSessionModal(),
+                    'closeBreakModal': () => this.closeBreakModal(),
+                    'closeLectureSelector': () => this.closeLectureSelectorModal(),
+                    'saveSpeaker': () => this.saveSpeaker(),
+                    'saveLecture': () => this.saveLecture(),
+                    'saveSession': () => this.saveSession(),
+                    'saveBreak': () => this.saveBreak(),
+                    'selectLecture': () => this.selectLecture(id),
+                    'addRoom': () => this.addRoom(),
+                    'editRoom': () => this.editRoom(id),
+                    'deleteRoom': () => this.deleteRoom(id),
+                    'generateTimeSlots': () => this.generateTimeSlotsFromSettings(),
+                    'saveSettings': () => this.saveSettings(),
+                    'openSlot': () => {
+                        const time = target.closest('.schedule-cell').dataset.time;
+                        const room = target.closest('.schedule-cell').dataset.room;
+                        this.openLectureSelectorModal(time, room);
+                    }
+                };
+                
+                const handler = actions[action];
+                if (handler) {
+                    handler();
+                } else {
+                    console.warn('Unknown action:', action);
+                }
+            },
+            
+            switchTab(tabName) {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tabName);
+                });
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.toggle('active', content.id === `${tabName}-tab`);
+                });
+                
+                if (tabName === 'schedule') this.renderSchedule();
+                if (tabName === 'speakers') this.renderSpeakers();
+                if (tabName === 'lectures') this.renderLectures();
+                if (tabName === 'sessions') this.renderSessions();
+                if (tabName === 'settings') this.renderSettings();
+            },
+            
+            render() {
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab) {
+                    this.switchTab(activeTab.dataset.tab);
+                }
+            },
+            
+            renderSchedule() {
+                const grid = document.getElementById('scheduleGrid');
+                const rooms = this.eventData.settings.rooms || [];
+                const times = this.eventData.settings.timeSlots || [];
+                
+                if (rooms.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-message">
+                            <p>룸이 설정되지 않았습니다</p>
+                            <p style="font-size: 14px; margin-top: 8px;">설정 탭에서 룸을 추가해주세요</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '<table class="schedule-table">';
+                
+                html += '<tr>';
+                html += '<th>Time</th>';
+                rooms.forEach(room => {
+                    html += `<th>${room}</th>`;
+                });
+                html += '</tr>';
+                
+                times.forEach(time => {
+                    html += '<tr>';
+                    html += `<td class="time-cell">${time}</td>`;
+                    
+                    rooms.forEach(room => {
+                        const key = `${time}-${room}`;
+                        const item = this.eventData.schedule[key];
+                        
+                        if (item) {
+                            if (item.type === 'lecture') {
+                                const lecture = this.eventData.lectures[item.lectureId];
+                                const speaker = lecture ? this.eventData.speakers[lecture.speakerId] : null;
+                                
+                                html += `<td class="schedule-cell">
+                                    <div class="lecture-content" draggable="true" data-draggable="true" data-key="${key}">
+                                        <div class="lecture-title">${lecture?.title || ''}</div>
+                                        ${speaker ? `<div class="speaker-info">
+                                            ${speaker.photo ? 
+                                                `<img src="${speaker.photo}" class="speaker-photo">` :
+                                                `<div class="speaker-photo placeholder">${speaker.name.charAt(0)}</div>`
+                                            }
+                                            <span class="speaker-name">${speaker.name}</span>
+                                        </div>` : ''}
+                                    </div>
+                                </td>`;
+                            } else if (item.type === 'session') {
+                                const session = this.eventData.sessions[item.sessionId];
+                                html += `<td class="session-header" colspan="${rooms.length}">${session?.name || 'Session'}</td>`;
+                            } else if (item.type === 'break') {
+                                html += `<td class="break-row" colspan="${rooms.length}">${item.title || 'Break'}</td>`;
+                            }
+                        } else {
+                            html += `<td class="schedule-cell empty" data-time="${time}" data-room="${room}" data-action="openSlot">
+                                <div class="empty-slot">+</div>
+                            </td>`;
+                        }
+                    });
+                    
+                    html += '</tr>';
+                });
+                
+                html += '</table>';
+                grid.innerHTML = html;
+            },
+            
+            renderSpeakers() {
+                const list = document.getElementById('speakersList');
+                const speakers = Object.entries(this.eventData.speakers);
+                
+                if (speakers.length === 0) {
+                    list.innerHTML = '<p class="empty-message">등록된 연자가 없습니다</p>';
+                    return;
+                }
+                
+                list.innerHTML = speakers.map(([id, speaker]) => `
+                    <div class="item-card speaker-card">
+                        ${speaker.photo ? 
+                            `<img src="${speaker.photo}" class="speaker-photo">` :
+                            `<div class="speaker-photo placeholder">${speaker.name.charAt(0)}</div>`
+                        }
+                        <div class="speaker-info-detail">
+                            <div class="speaker-name-large">${speaker.name}</div>
+                            ${speaker.affiliation ? `<div class="speaker-detail">📍 ${speaker.affiliation}</div>` : ''}
+                            ${speaker.email ? `<div class="speaker-detail">📧 ${speaker.email}</div>` : ''}
+                            <div class="actions">
+                                <button class="btn btn-small btn-primary" data-action="editSpeaker" data-id="${id}">수정</button>
+                                <button class="btn btn-small btn-danger" data-action="deleteSpeaker" data-id="${id}">삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            renderLectures() {
+                const list = document.getElementById('lecturesList');
+                const lectures = Object.entries(this.eventData.lectures);
+                
+                if (lectures.length === 0) {
+                    list.innerHTML = '<p class="empty-message">등록된 강의가 없습니다</p>';
+                    return;
+                }
+                
+                list.innerHTML = lectures.map(([id, lecture]) => {
+                    const speaker = this.eventData.speakers[lecture.speakerId];
+                    return `
+                        <div class="item-card">
+                            <h4>${lecture.title}</h4>
+                            <p>👤 ${speaker?.name || '미정'}</p>
+                            <p>⏱️ ${lecture.duration || 20}분</p>
+                            ${lecture.sponsorCompany ? `<p>🏢 ${lecture.sponsorCompany}</p>` : ''}
+                            <div class="actions">
+                                <button class="btn btn-small btn-primary" data-action="editLecture" data-id="${id}">수정</button>
+                                <button class="btn btn-small btn-danger" data-action="deleteLecture" data-id="${id}">삭제</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            
+            renderSessions() {
+                const list = document.getElementById('sessionsList');
+                const sessions = Object.entries(this.eventData.sessions);
+                
+                if (sessions.length === 0) {
+                    list.innerHTML = '<p class="empty-message">등록된 세션이 없습니다</p>';
+                    return;
+                }
+                
+                list.innerHTML = sessions.map(([id, session]) => `
+                    <div class="item-card">
+                        <h4>${session.name}</h4>
+                        <div class="actions">
+                            <button class="btn btn-small btn-primary" data-action="editSession" data-id="${id}">수정</button>
+                            <button class="btn btn-small btn-danger" data-action="deleteSession" data-id="${id}">삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            renderSettings() {
+                const roomsList = document.getElementById('roomsList');
+                const rooms = this.eventData.settings.rooms || [];
+                
+                if (rooms.length === 0) {
+                    roomsList.innerHTML = '<p class="empty-message">등록된 룸이 없습니다</p>';
+                } else {
+                    roomsList.innerHTML = rooms.map((room, index) => `
+                        <div class="room-list-item">
+                            <span class="room-name">${room}</span>
+                            <button class="btn btn-small btn-secondary" data-action="editRoom" data-id="${index}">수정</button>
+                            <button class="btn btn-small btn-danger" data-action="deleteRoom" data-id="${index}">삭제</button>
+                        </div>
+                    `).join('');
+                }
+                
+                document.getElementById('settingDefaultDuration').value = this.eventData.settings.defaultDuration || 20;
+                document.getElementById('settingBufferTime').value = this.eventData.settings.bufferTime || 10;
+            },
+            
+            // 모달 관리
+            openSpeakerModal() {
+                this.editingId = null;
+                this.currentPhotoData = null;
+                document.getElementById('speakerModalTitle').textContent = '연자 추가';
+                document.getElementById('speakerName').value = '';
+                document.getElementById('speakerAffiliation').value = '';
+                document.getElementById('speakerEmail').value = '';
+                document.getElementById('photoPreview').innerHTML = '<p>📷 클릭하여 사진 업로드</p><small>권장 크기: 400x400px</small>';
+                document.getElementById('speakerModal').classList.add('active');
+            },
+            
+            closeSpeakerModal() {
+                document.getElementById('speakerModal').classList.remove('active');
+            },
+            
+            async saveSpeaker() {
+                const name = document.getElementById('speakerName').value.trim();
+                
+                if (!name) {
+                    Toast.warning('이름을 입력해주세요');
+                    return;
+                }
+                
+                const speakerData = {
+                    name,
+                    affiliation: document.getElementById('speakerAffiliation').value.trim(),
+                    email: document.getElementById('speakerEmail').value.trim(),
+                    photo: this.currentPhotoData || ''
+                };
+                
+                const id = this.editingId || `speaker_${Date.now()}`;
+                this.eventData.speakers[id] = speakerData;
+                
+                await this.saveData();
+                this.closeSpeakerModal();
+                Toast.success(this.editingId ? '연자가 수정되었습니다' : '연자가 추가되었습니다');
+            },
+            
+            editSpeaker(id) {
+                const speaker = this.eventData.speakers[id];
+                this.editingId = id;
+                document.getElementById('speakerModalTitle').textContent = '연자 수정';
+                document.getElementById('speakerName').value = speaker.name || '';
+                document.getElementById('speakerAffiliation').value = speaker.affiliation || '';
+                document.getElementById('speakerEmail').value = speaker.email || '';
+                
+                if (speaker.photo) {
+                    this.currentPhotoData = speaker.photo;
+                    document.getElementById('photoPreview').innerHTML = `<img src="${speaker.photo}" style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px;">`;
+                }
+                
+                document.getElementById('speakerModal').classList.add('active');
+            },
+            
+            async deleteSpeaker(id) {
+                if (!confirm('이 연자를 삭제하시겠습니까?')) return;
+                
+                delete this.eventData.speakers[id];
+                await this.saveData();
+                Toast.success('연자가 삭제되었습니다');
+            },
+            
+            openLectureModal() {
+                this.editingId = null;
+                document.getElementById('lectureModalTitle').textContent = '강의 추가';
+                document.getElementById('lectureTitle').value = '';
+                document.getElementById('lectureDuration').value = this.eventData.settings.defaultDuration || 20;
+                document.getElementById('lectureSponsor').value = '';
+                document.getElementById('lectureProduct').value = '';
+                
+                const speakerSelect = document.getElementById('lectureSpeaker');
+                speakerSelect.innerHTML = '<option value="">연자 선택</option>';
+                Object.entries(this.eventData.speakers).forEach(([id, speaker]) => {
+                    speakerSelect.innerHTML += `<option value="${id}">${speaker.name}</option>`;
+                });
+                
+                document.getElementById('lectureModal').classList.add('active');
+            },
+            
+            closeLectureModal() {
+                document.getElementById('lectureModal').classList.remove('active');
+            },
+            
+            async saveLecture() {
+                const title = document.getElementById('lectureTitle').value.trim();
+                const speakerId = document.getElementById('lectureSpeaker').value;
+                
+                if (!title) {
+                    Toast.warning('강의 제목을 입력해주세요');
+                    return;
+                }
+                
+                if (!speakerId) {
+                    Toast.warning('연자를 선택해주세요');
+                    return;
+                }
+                
+                const lectureData = {
+                    title,
+                    speakerId,
+                    duration: parseInt(document.getElementById('lectureDuration').value) || 20,
+                    sponsorCompany: document.getElementById('lectureSponsor').value.trim(),
+                    productName: document.getElementById('lectureProduct').value.trim()
+                };
+                
+                const id = this.editingId || `lecture_${Date.now()}`;
+                this.eventData.lectures[id] = lectureData;
+                
+                await this.saveData();
+                this.closeLectureModal();
+                Toast.success(this.editingId ? '강의가 수정되었습니다' : '강의가 추가되었습니다');
+            },
+            
+            editLecture(id) {
+                const lecture = this.eventData.lectures[id];
+                this.editingId = id;
+                document.getElementById('lectureModalTitle').textContent = '강의 수정';
+                document.getElementById('lectureTitle').value = lecture.title || '';
+                document.getElementById('lectureDuration').value = lecture.duration || 20;
+                document.getElementById('lectureSponsor').value = lecture.sponsorCompany || '';
+                document.getElementById('lectureProduct').value = lecture.productName || '';
+                
+                const speakerSelect = document.getElementById('lectureSpeaker');
+                speakerSelect.innerHTML = '<option value="">연자 선택</option>';
+                Object.entries(this.eventData.speakers).forEach(([sid, speaker]) => {
+                    const selected = sid === lecture.speakerId ? 'selected' : '';
+                    speakerSelect.innerHTML += `<option value="${sid}" ${selected}>${speaker.name}</option>`;
+                });
+                
+                document.getElementById('lectureModal').classList.add('active');
+            },
+            
+            async deleteLecture(id) {
+                if (!confirm('이 강의를 삭제하시겠습니까?')) return;
+                
+                // 스케줄에서도 제거
+                for (const key in this.eventData.schedule) {
+                    if (this.eventData.schedule[key].lectureId === id) {
+                        delete this.eventData.schedule[key];
+                    }
+                }
+                
+                delete this.eventData.lectures[id];
+                await this.saveData();
+                Toast.success('강의가 삭제되었습니다');
+            },
+            
+            openSessionModal() {
+                this.editingId = null;
+                document.getElementById('sessionModalTitle').textContent = '세션 추가';
+                document.getElementById('sessionName').value = '';
+                document.getElementById('sessionTime').value = '';
+                
+                const chairSelect = document.getElementById('sessionChair');
+                chairSelect.innerHTML = '<option value="">선택 안 함</option>';
+                Object.entries(this.eventData.speakers).forEach(([id, speaker]) => {
+                    chairSelect.innerHTML += `<option value="${id}">${speaker.name}</option>`;
+                });
+                
+                document.getElementById('sessionModal').classList.add('active');
+            },
+            
+            closeSessionModal() {
+                document.getElementById('sessionModal').classList.remove('active');
+            },
+            
+            async saveSession() {
+                const name = document.getElementById('sessionName').value.trim();
+                const time = document.getElementById('sessionTime').value;
+                
+                if (!name) {
+                    Toast.warning('세션명을 입력해주세요');
+                    return;
+                }
+                
+                if (!time) {
+                    Toast.warning('시작 시간을 입력해주세요');
+                    return;
+                }
+                
+                const sessionData = {
+                    name,
+                    chairId: document.getElementById('sessionChair').value
+                };
+                
+                const id = this.editingId || `session_${Date.now()}`;
+                this.eventData.sessions[id] = sessionData;
+                
+                const room = this.eventData.settings.rooms[0] || 'Room A';
+                const key = `${time}-${room}`;
+                this.eventData.schedule[key] = {
+                    type: 'session',
+                    sessionId: id,
+                    time
+                };
+                
+                await this.saveData();
+                this.closeSessionModal();
+                Toast.success(this.editingId ? '세션이 수정되었습니다' : '세션이 추가되었습니다');
+            },
+            
+            editSession(id) {
+                const session = this.eventData.sessions[id];
+                this.editingId = id;
+                document.getElementById('sessionModalTitle').textContent = '세션 수정';
+                document.getElementById('sessionName').value = session.name || '';
+                
+                const chairSelect = document.getElementById('sessionChair');
+                chairSelect.innerHTML = '<option value="">선택 안 함</option>';
+                Object.entries(this.eventData.speakers).forEach(([sid, speaker]) => {
+                    const selected = sid === session.chairId ? 'selected' : '';
+                    chairSelect.innerHTML += `<option value="${sid}" ${selected}>${speaker.name}</option>`;
+                });
+                
+                document.getElementById('sessionModal').classList.add('active');
+            },
+            
+            async deleteSession(id) {
+                if (!confirm('이 세션을 삭제하시겠습니까?')) return;
+                
+                delete this.eventData.sessions[id];
+                await this.saveData();
+                Toast.success('세션이 삭제되었습니다');
+            },
+            
+            openBreakModal() {
+                document.getElementById('breakTime').value = '';
+                document.getElementById('breakDuration').value = '30';
+                document.getElementById('breakTitle').value = 'Coffee Break';
+                document.getElementById('breakModal').classList.add('active');
+            },
+            
+            closeBreakModal() {
+                document.getElementById('breakModal').classList.remove('active');
+            },
+            
+            async saveBreak() {
+                const time = document.getElementById('breakTime').value;
+                const duration = parseInt(document.getElementById('breakDuration').value);
+                const title = document.getElementById('breakTitle').value.trim();
+                
+                if (!time || !duration || !title) {
+                    Toast.warning('모든 필드를 입력해주세요');
+                    return;
+                }
+                
+                this.saveToHistory();
+                
+                const room = this.eventData.settings.rooms[0] || 'Room A';
+                const key = `${time}-${room}`;
+                
+                this.eventData.schedule[key] = {
+                    type: 'break',
+                    title,
+                    time,
+                    duration
+                };
+                
+                await this.saveData();
+                this.closeBreakModal();
+                Toast.success('Break가 추가되었습니다');
+            },
+            
+            openLectureSelectorModal(time, room) {
+                this.selectedSlot = { time, room };
+                const list = document.getElementById('lectureSelectorList');
+                const lectures = Object.entries(this.eventData.lectures);
+                
+                if (lectures.length === 0) {
+                    list.innerHTML = '<p class="empty-message">등록된 강의가 없습니다</p>';
+                } else {
+                    list.innerHTML = lectures.map(([id, lecture]) => {
+                        const speaker = this.eventData.speakers[lecture.speakerId];
+                        return `
+                            <div class="item-card" data-action="selectLecture" data-id="${id}" style="cursor: pointer;">
+                                <h4>${lecture.title}</h4>
+                                <p>연자: ${speaker?.name || '미정'} | ${lecture.duration || 20}분</p>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                document.getElementById('lectureSelectorModal').classList.add('active');
+            },
+            
+            closeLectureSelectorModal() {
+                document.getElementById('lectureSelectorModal').classList.remove('active');
+            },
+            
+            async selectLecture(lectureId) {
+                if (this.selectedSlot) {
+                    this.saveToHistory();
+                    
+                    const key = `${this.selectedSlot.time}-${this.selectedSlot.room}`;
+                    this.eventData.schedule[key] = {
+                        type: 'lecture',
+                        lectureId,
+                        time: this.selectedSlot.time,
+                        placedAt: Date.now()
+                    };
+                    
+                    await this.saveData();
+                    this.closeLectureSelectorModal();
+                    Toast.success('강의가 배치되었습니다');
+                }
+            },
+            
+            // 설정
+            async addRoom() {
+                const name = prompt('룸 이름:');
+                if (!name) return;
+                
+                this.eventData.settings.rooms.push(name);
+                await this.saveData();
+                Toast.success('룸이 추가되었습니다');
+            },
+            
+            async editRoom(index) {
+                const newName = prompt('새 룸 이름:', this.eventData.settings.rooms[index]);
+                if (!newName) return;
+                
+                this.eventData.settings.rooms[index] = newName;
+                await this.saveData();
+                Toast.success('룸 이름이 변경되었습니다');
+            },
+            
+            async deleteRoom(index) {
+                if (!confirm('이 룸을 삭제하시겠습니까?')) return;
+                
+                this.eventData.settings.rooms.splice(index, 1);
+                await this.saveData();
+                Toast.success('룸이 삭제되었습니다');
+            },
+            
+            async generateTimeSlotsFromSettings() {
+                const start = document.getElementById('settingStartTime').value;
+                const end = document.getElementById('settingEndTime').value;
+                const interval = parseInt(document.getElementById('settingTimeInterval').value);
+                
+                if (!start || !end) {
+                    Toast.warning('시작 시간과 종료 시간을 입력하세요');
+                    return;
+                }
+                
+                const slots = [];
+                const [startHour, startMin] = start.split(':').map(Number);
+                const [endHour, endMin] = end.split(':').map(Number);
+                
+                let currentHour = startHour;
+                let currentMin = startMin;
+                
+                while (currentHour < endHour || (currentHour === endHour && currentMin <= endMin)) {
+                    slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`);
+                    
+                    currentMin += interval;
+                    if (currentMin >= 60) {
+                        currentMin -= 60;
+                        currentHour += 1;
+                    }
+                }
+                
+                this.eventData.settings.timeSlots = slots;
+                await this.saveData();
+                Toast.success('시간 슬롯이 생성되었습니다');
+            },
+            
+            async saveSettings() {
+                this.eventData.settings.defaultDuration = parseInt(document.getElementById('settingDefaultDuration').value);
+                this.eventData.settings.bufferTime = parseInt(document.getElementById('settingBufferTime').value);
+                
+                await this.saveData();
+                Toast.success('설정이 저장되었습니다');
+            },
+            
+            checkAllConflicts() {
+                // 간단한 중복 체크 예시
+                Toast.info('중복 검사 기능은 향후 추가될 예정입니다');
+            }
+        };
+
+        const Toast = {
+            show(message, type = 'info', duration = 3000) {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icons = {
+                    success: '✅',
+                    error: '❌',
+                    warning: '⚠️',
+                    info: 'ℹ️'
+                };
+                
+                toast.innerHTML = `
+                    <span>${icons[type]}</span>
+                    <span>${message}</span>
+                `;
+                
+                container.appendChild(toast);
+                
+                if (duration > 0) {
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, duration);
+                }
+            },
+            success(msg) { this.show(msg, 'success'); },
+            error(msg) { this.show(msg, 'error', 5000); },
+            warning(msg) { this.show(msg, 'warning', 4000); },
+            info(msg) { this.show(msg, 'info'); }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+</html>
