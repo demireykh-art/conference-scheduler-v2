@@ -937,7 +937,15 @@
                     this.eventData.lectures = data.lectures || {};
                     this.eventData.sessions = data.sessions || {};
                     this.eventData.schedule = data.schedule || {};
-                    this.eventData.settings = data.settings || this.eventData.settings;
+                    
+                    // settings 초기화 보장
+                    this.eventData.settings = {
+                        rooms: [],
+                        timeSlots: [],
+                        defaultDuration: 20,
+                        bufferTime: 10,
+                        ...(data.settings || {})
+                    };
                     
                     if (!this.eventData.settings.timeSlots || this.eventData.settings.timeSlots.length === 0) {
                         this.eventData.settings.timeSlots = this.generateDefaultTimeSlots();
@@ -970,7 +978,15 @@
                     this.eventData.lectures = data.lectures || {};
                     this.eventData.sessions = data.sessions || {};
                     this.eventData.schedule = data.schedule || {};
-                    this.eventData.settings = data.settings || this.eventData.settings;
+                    
+                    // settings 초기화 보장
+                    this.eventData.settings = {
+                        rooms: [],
+                        timeSlots: [],
+                        defaultDuration: 20,
+                        bufferTime: 10,
+                        ...(data.settings || {})
+                    };
                     
                     this.render();
                     this.updateSyncStatus('synced');
@@ -1702,6 +1718,10 @@
             async addRoom() {
                 const name = prompt('룸 이름:');
                 if (!name) return;
+                
+                if (!this.eventData.settings.rooms) {
+                    this.eventData.settings.rooms = [];
+                }
                 
                 this.eventData.settings.rooms.push(name);
                 await this.saveData();
