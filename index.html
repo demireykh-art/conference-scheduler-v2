@@ -100,6 +100,7 @@
         .lobby-header h2 {
             font-size: 24px;
             color: #111827;
+            margin-bottom: 8px;
         }
 
         .user-info {
@@ -112,16 +113,37 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            border: 2px solid #667eea;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 32px;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
         }
 
         .btn-secondary {
-            padding: 8px 16px;
             background: #f3f4f6;
+            color: #374151;
             border: none;
+            padding: 10px 20px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
             transition: all 0.2s;
         }
 
@@ -129,65 +151,47 @@
             background: #e5e7eb;
         }
 
-        .btn-primary {
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
         .events-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-            margin-top: 24px;
         }
 
         .event-card {
-            background: #f9fafb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 24px;
             border-radius: 12px;
-            border: 2px solid #e5e7eb;
             cursor: pointer;
             transition: all 0.2s;
+            color: white;
         }
 
         .event-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
         }
 
         .event-card h3 {
             font-size: 18px;
-            color: #111827;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .event-meta {
-            color: #6b7280;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             font-size: 14px;
-            margin-top: 8px;
+            opacity: 0.9;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #9ca3af;
+            color: #6b7280;
         }
 
         .empty-state-icon {
-            font-size: 48px;
+            font-size: 64px;
             margin-bottom: 16px;
         }
 
@@ -249,6 +253,7 @@
         .form-control:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .modal-footer {
@@ -263,12 +268,14 @@
             top: 20px;
             right: 20px;
             z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .toast {
             background: white;
             padding: 16px 24px;
-            margin-bottom: 10px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             animation: slideIn 0.3s ease-out;
@@ -289,11 +296,10 @@
         }
 
         .loading {
-            display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f4f6;
-            border-top-color: #667eea;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -309,7 +315,7 @@
         <div class="logo">📅</div>
         <h1>Conference Scheduler V3</h1>
         <p class="subtitle">글로벌 학술대회 일정 관리 플랫폼</p>
-        <button class="google-btn" id="loginBtn" onclick="handleLogin()">
+        <button class="google-btn" id="loginBtn">
             <img src="https://www.google.com/favicon.ico" width="20">
             Google 계정으로 로그인
         </button>
@@ -325,11 +331,11 @@
             <div class="user-info">
                 <img id="userAvatar" class="user-avatar" alt="User">
                 <span id="userName"></span>
-                <button class="btn-secondary" onclick="handleLogout()">로그아웃</button>
+                <button class="btn-secondary" id="logoutBtn">로그아웃</button>
             </div>
         </div>
 
-        <button class="btn-primary" onclick="openCreateEventModal()">➕ 새 행사 만들기</button>
+        <button class="btn-primary" id="createEventBtn">➕ 새 행사 만들기</button>
 
         <div id="eventsGrid" class="events-grid"></div>
     </div>
@@ -376,8 +382,8 @@
                 </select>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeCreateEventModal()">취소</button>
-                <button class="btn-primary" onclick="createEvent()">생성하기</button>
+                <button class="btn-secondary" id="closeModalBtn">취소</button>
+                <button class="btn-primary" id="confirmCreateBtn">생성하기</button>
             </div>
         </div>
     </div>
@@ -389,7 +395,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        // Firebase 설정 (V2와 동일)
         const firebaseConfig = {
             apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
             authDomain: "scheduler2-99724.firebaseapp.com",
@@ -404,11 +409,9 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        // 전역 변수
         let currentUser = null;
         let userEvents = [];
 
-        // Toast 알림
         const Toast = {
             show(message, type = 'info', duration = 3000) {
                 const container = document.getElementById('toastContainer');
@@ -422,11 +425,7 @@
                     info: 'ℹ️'
                 };
                 
-                toast.innerHTML = `
-                    <span>${icons[type]}</span>
-                    <span>${message}</span>
-                `;
-                
+                toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
                 container.appendChild(toast);
                 
                 if (duration > 0) {
@@ -442,7 +441,21 @@
             info(msg) { this.show(msg, 'info'); }
         };
 
-        // 인증 상태 감지
+        // 이벤트 리스너 (onclick 대신 addEventListener 사용)
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('createEventBtn').addEventListener('click', openCreateEventModal);
+            document.getElementById('closeModalBtn').addEventListener('click', closeCreateEventModal);
+            document.getElementById('confirmCreateBtn').addEventListener('click', createEvent);
+            
+            document.getElementById('createEventModal').addEventListener('click', (e) => {
+                if (e.target.id === 'createEventModal') {
+                    closeCreateEventModal();
+                }
+            });
+        });
+
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -450,7 +463,6 @@
                 document.getElementById('lobbyContainer').classList.add('active');
                 document.getElementById('userAvatar').src = user.photoURL || 'https://via.placeholder.com/40';
                 document.getElementById('userName').textContent = user.displayName || user.email;
-                
                 await loadUserEvents();
             } else {
                 document.getElementById('loginContainer').classList.remove('hidden');
@@ -458,7 +470,6 @@
             }
         });
 
-        // 로그인
         async function handleLogin() {
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
@@ -476,7 +487,6 @@
             }
         }
 
-        // 로그아웃
         async function handleLogout() {
             if (confirm('로그아웃 하시겠습니까?')) {
                 await firebase.auth().signOut();
@@ -484,7 +494,6 @@
             }
         }
 
-        // 사용자 행사 로드
         async function loadUserEvents() {
             try {
                 const snapshot = await firebase.database()
@@ -507,7 +516,6 @@
             }
         }
 
-        // 행사 목록 렌더링
         function renderEvents() {
             const grid = document.getElementById('eventsGrid');
             
@@ -546,17 +554,17 @@
             return countries[code] || code;
         }
 
-        // 모달
         function openCreateEventModal() {
+            console.log('✅ 새 행사 만들기 버튼 클릭됨!');
             document.getElementById('createEventModal').classList.add('active');
             document.getElementById('eventName').value = '';
+            document.getElementById('eventName').focus();
         }
 
         function closeCreateEventModal() {
             document.getElementById('createEventModal').classList.remove('active');
         }
 
-        // 행사 생성
         async function createEvent() {
             const name = document.getElementById('eventName').value.trim();
             const country = document.getElementById('eventCountry').value;
@@ -569,6 +577,10 @@
             }
             
             try {
+                const btn = document.getElementById('confirmCreateBtn');
+                btn.disabled = true;
+                btn.textContent = '생성 중...';
+                
                 const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 
                 const eventData = {
@@ -581,10 +593,7 @@
                     creatorName: currentUser.displayName || currentUser.email
                 };
                 
-                // 행사 정보 저장
                 await firebase.database().ref(`/events/${eventId}/info`).set(eventData);
-                
-                // 사용자 행사 목록에 추가
                 await firebase.database().ref(`/users/${currentUser.uid}/events/${eventId}`).set({
                     name,
                     role: 'owner',
@@ -594,26 +603,21 @@
                 Toast.success('행사가 생성되었습니다!');
                 closeCreateEventModal();
                 
-                // 스케줄러로 이동
-                window.location.href = `scheduler.html?eventId=${eventId}`;
+                setTimeout(() => {
+                    window.location.href = `scheduler.html?eventId=${eventId}`;
+                }, 500);
                 
             } catch (error) {
                 console.error('행사 생성 실패:', error);
                 Toast.error('행사 생성에 실패했습니다');
+                document.getElementById('confirmCreateBtn').disabled = false;
+                document.getElementById('confirmCreateBtn').textContent = '생성하기';
             }
         }
 
-        // 행사 열기
         function openEvent(eventId) {
             window.location.href = `scheduler.html?eventId=${eventId}`;
         }
-
-        // 모달 외부 클릭 시 닫기
-        document.getElementById('createEventModal').addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                closeCreateEventModal();
-            }
-        });
     </script>
 </body>
 </html>
