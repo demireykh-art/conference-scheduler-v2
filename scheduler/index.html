@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Scheduler V2</title>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/v2-styles.css">
+    
+    <style>
+        /* 추가 스타일: V2 전용 */
+        
+        /* Event Lobby */
+        .event-lobby-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .event-lobby-overlay.hidden { display: none; }
+        
+        .event-lobby {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .event-lobby-header {
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .event-lobby-header h1 { margin: 0 0 8px; font-size: 1.5rem; }
+        .event-lobby-header p { margin: 0; opacity: 0.9; }
+        
+        .event-lobby-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .event-lobby-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .event-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .event-card {
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .event-card:hover { border-color: #667eea; }
+        .event-card.current { border-color: #10b981; background: #ecfdf5; }
+        
+        .event-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .event-name { margin: 0; font-size: 1.1rem; }
+        .current-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .event-card-body p {
+            margin: 4px 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .event-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+        
+        /* Room Tabs */
+        .room-tabs-container {
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+        }
+        
+        .room-tabs {
+            display: flex;
+            gap: 8px;
+            min-width: max-content;
+        }
+        
+        .room-tab {
+            padding: 8px 16px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .room-tab:hover { background: #e2e8f0; }
+        .room-tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* Single Room View */
+        .single-room-view .single-room-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .room-header-banner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .room-header-banner h2 { margin: 0; }
+        .kma-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .timeline-wrapper {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .timeline-row {
+            display: flex;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: 48px;
+        }
+        .timeline-row:last-child { border-bottom: none; }
+        
+        .timeline-time-label {
+            width: 80px;
+            padding: 12px;
+            background: #f8f9fa;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timeline-cell {
+            flex: 1;
+            padding: 8px;
+            min-height: 48px;
+        }
+        
+        .session-banner {
+            background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .session-banner:hover { background: #fde68a; }
+        .session-name { font-weight: 600; color: #92400e; }
+        .session-time-range { font-size: 0.85rem; color: #b45309; }
+        .session-moderator { font-size: 0.85rem; color: #78350f; margin-top: 4px; }
+        
+        /* Create Event Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 { margin: 0; }
+        
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .date-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .date-row input { flex: 1; padding: 8px; }
+        
+        /* Upload Modals */
+        .upload-summary {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .upload-summary p { margin: 4px 0; }
+        
+        .upload-table-wrapper {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        .upload-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .upload-preview-table th, .upload-preview-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .upload-preview-table th { background: #f1f5f9; position: sticky; top: 0; }
+        .new-row { background: #ecfdf5; }
+        .update-row { background: #fffbeb; }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-overlay.hidden { display: none; }
+        
+        .loading-spinner {
+            text-align: center;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #374151;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-small { padding: 6px 12px; font-size: 0.85rem; }
+        
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 150px;
+            z-index: 9999;
+        }
+        .context-menu .menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .context-menu .menu-item:hover { background: #f1f5f9; }
+        .context-menu .menu-item:first-child { border-radius: 8px 8px 0 0; }
+        .context-menu .menu-item:last-child { border-radius: 0 0 8px 8px; }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p class="loading-message">로딩 중...</p>
+        </div>
+    </div>
+    
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="event-lobby-overlay">
+        <div class="event-lobby" style="max-width: 400px;">
+            <div class="event-lobby-header">
+                <h1>🔐 로그인</h1>
+                <p>Google 계정으로 로그인하세요</p>
+            </div>
+            <div class="event-lobby-content" style="text-align: center; padding: 40px;">
+                <button class="btn btn-primary" onclick="signInWithGoogle()" style="padding: 16px 32px; font-size: 1.1rem;">
+                    🌐 Google로 로그인
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Event Lobby Overlay -->
+    <div id="eventLobbyOverlay" class="event-lobby-overlay hidden">
+        <div class="event-lobby">
+            <div class="event-lobby-header">
+                <h1>📅 Conference Scheduler</h1>
+                <p>행사를 선택하거나 새로 생성하세요</p>
+            </div>
+            <div class="event-lobby-content">
+                <div class="event-lobby-actions">
+                    <button class="btn btn-primary" onclick="openCreateEventModal()">
+                        ➕ 새 행사 생성
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadEventList()">
+                        🔄 새로고침
+                    </button>
+                </div>
+                <div id="eventList" class="event-list">
+                    <!-- 동적으로 채워짐 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Event Modal -->
+    <div id="createEventModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>➕ 새 행사 생성</h2>
+                <button class="btn btn-secondary btn-small" onclick="closeCreateEventModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>행사 이름 *</label>
+                    <input type="text" id="newEventName" placeholder="예: ASLS Tokyo 2026">
+                </div>
+                <div class="form-group">
+                    <label>행사 날짜</label>
+                    <div id="newEventDates">
+                        <!-- 동적으로 추가됨 -->
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="addEventDateRow()" style="margin-top: 8px;">
+                        + 날짜 추가
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateEventModal()">취소</button>
+                <button class="btn btn-primary" onclick="saveNewEvent()">생성</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Speaker Upload Modal -->
+    <div id="speakerUploadModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 연자 데이터 업로드</h2>
+                <button class="btn btn-secondary btn-small" onclick="closeSpeakerUploadModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Excel 파일 선택</label>
+                    <input type="file" id="speakerUploadFile" accept=".xlsx,.xls,.csv" onchange="handleSpeakerFileUpload(event)">
+                    <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">
+                        필수 컬럼: name (이름)<br>
+                        선택 컬럼: nameEn, affiliation, affiliationEn, isASLS, expertiseTags
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>업로드 방식</label>
+                    <select id="speakerUploadMode">
+                        <option value="merge">기존 데이터와 병합</option>
+                        <option value="replace">기존 데이터 덮어쓰기</option>
+                    </select>
+                </div>
+                <div id="speakerUploadPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="exportSpeakersToExcel()">📥 내보내기</button>
+                <button class="btn btn-secondary" onclick="closeSpeakerUploadModal()">취소</button>
+                <button class="btn btn-primary" id="speakerUploadSaveBtn" disabled>저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Company Upload Modal -->
+    <div id="companyUploadModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏢 업체 데이터 업로드</h2>
+                <button class="btn btn-secondary btn-small" onclick="closeCompanyUploadModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Excel 파일 선택</label>
+                    <input type="file" id="companyUploadFile" accept=".xlsx,.xls,.csv" onchange="handleCompanyFileUpload(event)">
+                    <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">
+                        필수 컬럼: name (업체명)<br>
+                        선택 컬럼: nameEn, contact, email, phone, boothType, boothCount
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>업로드 방식</label>
+                    <select id="companyUploadMode">
+                        <option value="merge">기존 데이터와 병합</option>
+                        <option value="replace">기존 데이터 덮어쓰기</option>
+                    </select>
+                </div>
+                <div id="companyUploadPreview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="exportCompaniesToExcel()">📥 내보내기</button>
+                <button class="btn btn-secondary" onclick="closeCompanyUploadModal()">취소</button>
+                <button class="btn btn-primary" id="companyUploadSaveBtn" disabled>저장</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App Container -->
+    <div id="appContainer" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">📅 <span id="currentEventName">행사 미선택</span></h1>
+                <button id="switchEventBtn" class="btn btn-secondary btn-small" onclick="showEventLobby()" style="display: none;">
+                    🔄 행사 변경
+                </button>
+            </div>
+            <div class="header-center">
+                <div id="dateButtonsContainer" class="date-buttons">
+                    <!-- 날짜 버튼들 -->
+                </div>
+            </div>
+            <div class="header-right">
+                <span id="userInfo" class="user-info"></span>
+                <button class="btn btn-secondary btn-small edit-only" onclick="openSpeakerUploadModal()">📋 연자</button>
+                <button class="btn btn-secondary btn-small edit-only" onclick="openCompanyUploadModal()">🏢 업체</button>
+                <button class="btn btn-secondary btn-small" onclick="signOut()">로그아웃</button>
+            </div>
+        </header>
+        
+        <!-- Room Tabs -->
+        <div id="roomTabsContainer" class="room-tabs-container">
+            <!-- 룸 탭들 -->
+        </div>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left: Lecture List -->
+            <aside class="lecture-panel">
+                <div class="panel-header">
+                    <h2>강의 목록</h2>
+                    <button class="btn btn-primary btn-small edit-only" onclick="openCreateModal()">+ 추가</button>
+                </div>
+                <div class="search-filters">
+                    <input type="text" id="lectureSearch" placeholder="강의/연자 검색..." oninput="filterLectures()">
+                    <select id="categoryFilter" onchange="filterLectures()">
+                        <option value="">전체 카테고리</option>
+                    </select>
+                </div>
+                <div id="lectureList" class="lecture-list">
+                    <!-- 강의 목록 -->
+                </div>
+                <div class="panel-footer">
+                    <span id="lectureCount">0개</span>
+                    <button class="btn btn-secondary btn-small" id="undoBtn" disabled onclick="performUndo()">↩(0)</button>
+                </div>
+            </aside>
+            
+            <!-- Right: Schedule Grid -->
+            <section class="schedule-panel">
+                <div id="scheduleGrid" class="schedule-grid">
+                    <!-- 시간표 -->
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Scripts (순서 중요) -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/event-lobby.js"></script>
+    <script src="js/data-import.js"></script>
+    <script src="js/room-tabs.js"></script>
+    <script src="js/schedule.js"></script>
+    <script src="js/lectures.js"></script>
+    <script src="js/sessions.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/chairs.js"></script>
+    <script src="js/sponsor.js"></script>
+    <script src="js/upload.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/typo-check.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

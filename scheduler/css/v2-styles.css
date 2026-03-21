@@ -1,0 +1,957 @@
+/* ============================================
+   V2 상용화 버전 추가 스타일
+   ============================================ */
+
+/* ============================================
+   App Header (V2)
+   ============================================ */
+
+.app-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-info {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-right: 8px;
+}
+
+/* Date Buttons */
+.date-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.date-btn {
+    padding: 8px 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: transparent;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.date-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.date-btn.active {
+    background: white;
+    color: #1e3a5f;
+    border-color: white;
+    font-weight: 600;
+}
+
+/* ============================================
+   Room Tabs
+   ============================================ */
+
+.room-tabs-container {
+    background: #f1f5f9;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.room-tabs {
+    display: flex;
+    gap: 8px;
+    min-width: max-content;
+}
+
+.room-tab {
+    padding: 10px 20px;
+    border: none;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.room-tab:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.room-tab.active {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ============================================
+   Main Content Layout
+   ============================================ */
+
+.main-content {
+    display: flex;
+    height: calc(100vh - 130px);
+    overflow: hidden;
+}
+
+/* Lecture Panel (Left) */
+.lecture-panel {
+    width: 320px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.search-filters {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-filters input,
+.search-filters select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.lecture-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.panel-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Schedule Panel (Right) */
+.schedule-panel {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+    background: #f8f9fa;
+}
+
+/* ============================================
+   Schedule Grid - All Rooms View
+   ============================================ */
+
+.all-rooms-view .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.all-rooms-view .schedule-table th {
+    background: #1e3a5f;
+    color: white;
+    padding: 12px 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.all-rooms-view .schedule-table th.kma-room {
+    background: #0d6efd;
+}
+
+.all-rooms-view .time-col {
+    width: 70px;
+}
+
+.all-rooms-view .time-cell {
+    background: #f8f9fa;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #64748b;
+    text-align: center;
+    padding: 8px 4px;
+    border-right: 1px solid #e2e8f0;
+}
+
+.all-rooms-view .schedule-cell {
+    border: 1px solid #e2e8f0;
+    padding: 2px;
+    vertical-align: top;
+    min-height: 40px;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.all-rooms-view .schedule-cell:hover {
+    background: #f1f5f9;
+}
+
+.all-rooms-view .schedule-cell.drop-target {
+    background: #dbeafe;
+    box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+.all-rooms-view .schedule-cell.spanned-by-above {
+    visibility: hidden;
+}
+
+/* ============================================
+   Schedule Grid - Single Room View
+   ============================================ */
+
+.single-room-view {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.single-room-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.room-header-banner {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.room-header-banner h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.kma-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.timeline-wrapper {
+    border: 1px solid #e2e8f0;
+    border-top: none;
+}
+
+.timeline-row {
+    display: flex;
+    border-bottom: 1px solid #f1f5f9;
+    min-height: 50px;
+}
+
+.timeline-row:last-child {
+    border-bottom: none;
+}
+
+.timeline-time-label {
+    width: 80px;
+    min-width: 80px;
+    padding: 12px;
+    background: #f8f9fa;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #e2e8f0;
+}
+
+.timeline-cell {
+    flex: 1;
+    padding: 4px 8px;
+    min-height: 50px;
+    transition: background 0.2s;
+}
+
+.timeline-cell:hover {
+    background: #f8f9fa;
+}
+
+.timeline-cell.drop-target {
+    background: #dbeafe;
+    box-shadow: inset 0 0 0 2px #3b82f6;
+}
+
+/* Session Banner in Single Room View */
+.session-banner {
+    background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 4px solid #f59e0b;
+    padding: 14px 20px;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.session-banner:hover {
+    background: linear-gradient(90deg, #fde68a 0%, #fcd34d 100%);
+}
+
+.session-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #92400e;
+    margin-bottom: 4px;
+}
+
+.session-time-range {
+    font-size: 0.85rem;
+    color: #b45309;
+}
+
+.session-moderator {
+    font-size: 0.85rem;
+    color: #78350f;
+    margin-top: 4px;
+}
+
+/* ============================================
+   Lecture Card
+   ============================================ */
+
+.lecture-card {
+    background: white;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 2px;
+    cursor: grab;
+    border-left: 4px solid var(--category-color, #757575);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+    font-size: 0.8rem;
+}
+
+.lecture-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.lecture-card.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.lecture-card .lecture-time {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.lecture-card .lecture-title {
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.lecture-card .lecture-speaker {
+    color: #475569;
+    font-size: 0.8rem;
+}
+
+.lecture-card .lecture-affiliation {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.lecture-card .lecture-company {
+    font-size: 0.75rem;
+    color: #0369a1;
+    margin-top: 4px;
+}
+
+.lecture-card .lecture-category {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: white;
+    margin-top: 6px;
+}
+
+/* Break Card */
+.lecture-card.break-card {
+    background: #f8f9fa;
+    border-left-color: #78716c;
+}
+
+/* Luncheon Card */
+.lecture-card.luncheon-card {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+}
+
+/* ============================================
+   Session Indicator (All Rooms View)
+   ============================================ */
+
+.session-indicator {
+    background: #fef3c7;
+    border-left: 3px solid #f59e0b;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.session-indicator:hover {
+    background: #fde68a;
+}
+
+.session-name-small {
+    font-weight: 600;
+    color: #92400e;
+}
+
+/* ============================================
+   Event Lobby
+   ============================================ */
+
+.event-lobby-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.event-lobby-overlay.hidden {
+    display: none;
+}
+
+.event-lobby {
+    background: white;
+    border-radius: 16px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
+
+.event-lobby-header {
+    padding: 28px 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.event-lobby-header h1 {
+    margin: 0 0 8px;
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.event-lobby-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.event-lobby-content {
+    padding: 24px 32px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.event-lobby-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.event-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.event-card {
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+}
+
+.event-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.event-card.current {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+.event-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.event-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.current-badge {
+    background: #10b981;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.event-card-body p {
+    margin: 6px 0;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.event-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #64748b;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+/* ============================================
+   Modal
+   ============================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1001;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.date-row input {
+    flex: 1;
+    padding: 10px 12px;
+}
+
+/* ============================================
+   Upload Preview
+   ============================================ */
+
+.upload-summary {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    padding: 18px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.upload-summary p {
+    margin: 6px 0;
+    font-size: 0.95rem;
+}
+
+.upload-table-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.upload-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.upload-preview-table th,
+.upload-preview-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.upload-preview-table th {
+    background: #f1f5f9;
+    position: sticky;
+    top: 0;
+    font-weight: 600;
+}
+
+.upload-preview-table .new-row {
+    background: #ecfdf5;
+}
+
+.upload-preview-table .update-row {
+    background: #fffbeb;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #cbd5e1;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+
+/* ============================================
+   Loading
+   ============================================ */
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e2e8f0;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-message {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+/* ============================================
+   Context Menu
+   ============================================ */
+
+.context-menu {
+    position: fixed;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    min-width: 160px;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.context-menu .menu-item {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.context-menu .menu-item:hover {
+    background: #f1f5f9;
+}
+
+/* ============================================
+   Toast Container (if not in state.js)
+   ============================================ */
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .lecture-panel {
+        width: 100%;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .schedule-panel {
+        flex: 1;
+        min-height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+    
+    .header-left,
+    .header-center,
+    .header-right {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .date-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .room-tabs {
+        padding: 0 8px;
+    }
+    
+    .room-tab {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .event-lobby-header {
+        padding: 20px 24px;
+    }
+    
+    .event-lobby-content {
+        padding: 20px 24px;
+    }
+    
+    .event-list {
+        grid-template-columns: 1fr;
+    }
+}

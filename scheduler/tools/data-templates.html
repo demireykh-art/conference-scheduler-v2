@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 템플릿 다운로드</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f8f9fa;
+            padding: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 32px; }
+        .section {
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .section h2 {
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+        .section p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th { background: #e2e8f0; font-weight: 600; }
+        .required { color: #ef4444; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #374151;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .buttons { display: flex; gap: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 데이터 업로드 템플릿</h1>
+        <p class="subtitle">Conference Scheduler V2에 데이터를 업로드하기 위한 Excel 템플릿입니다.</p>
+        
+        <div class="section">
+            <h2>👤 연자 데이터 템플릿</h2>
+            <p>연자 정보를 일괄 등록할 때 사용합니다.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>컬럼명</th>
+                        <th>설명</th>
+                        <th>필수</th>
+                        <th>예시</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>name</td><td>이름 (한글)</td><td class="required">✅</td><td>홍길동</td></tr>
+                    <tr><td>nameEn</td><td>영문 이름</td><td></td><td>Gildong Hong</td></tr>
+                    <tr><td>affiliation</td><td>소속 (한글)</td><td></td><td>서울대학교병원</td></tr>
+                    <tr><td>affiliationEn</td><td>영문 소속</td><td></td><td>Seoul National University Hospital</td></tr>
+                    <tr><td>isASLS</td><td>ASLS 회원 여부</td><td></td><td>Y 또는 N</td></tr>
+                    <tr><td>expertiseTags</td><td>전문 분야 (쉼표 구분)</td><td></td><td>Injectables, Laser</td></tr>
+                </tbody>
+            </table>
+            
+            <div class="buttons">
+                <button class="btn btn-primary" onclick="downloadSpeakerTemplate()">📥 연자 템플릿 다운로드</button>
+                <button class="btn btn-secondary" onclick="downloadSpeakerSample()">📄 샘플 데이터 포함</button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🏢 업체 데이터 템플릿</h2>
+            <p>협찬사/업체 정보를 일괄 등록할 때 사용합니다.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>컬럼명</th>
+                        <th>설명</th>
+                        <th>필수</th>
+                        <th>예시</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>name</td><td>업체명</td><td class="required">✅</td><td>ABC 제약</td></tr>
+                    <tr><td>nameEn</td><td>영문명</td><td></td><td>ABC Pharma</td></tr>
+                    <tr><td>contact</td><td>담당자</td><td></td><td>김담당</td></tr>
+                    <tr><td>email</td><td>이메일</td><td></td><td>contact@abc.com</td></tr>
+                    <tr><td>phone</td><td>연락처</td><td></td><td>010-1234-5678</td></tr>
+                    <tr><td>boothType</td><td>부스 형태</td><td></td><td>Diamond</td></tr>
+                    <tr><td>boothCount</td><td>부스 수</td><td></td><td>2</td></tr>
+                </tbody>
+            </table>
+            
+            <div class="buttons">
+                <button class="btn btn-primary" onclick="downloadCompanyTemplate()">📥 업체 템플릿 다운로드</button>
+                <button class="btn btn-secondary" onclick="downloadCompanySample()">📄 샘플 데이터 포함</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function downloadSpeakerTemplate() {
+            const data = [
+                { name: '', nameEn: '', affiliation: '', affiliationEn: '', isASLS: '', expertiseTags: '' }
+            ];
+            downloadExcel(data, 'speaker_template.xlsx', 'Speakers');
+        }
+        
+        function downloadSpeakerSample() {
+            const data = [
+                { name: '홍길동', nameEn: 'Gildong Hong', affiliation: '서울대학교병원', affiliationEn: 'Seoul National University Hospital', isASLS: 'Y', expertiseTags: 'Injectables, Laser' },
+                { name: '김철수', nameEn: 'Cheolsu Kim', affiliation: '연세대 세브란스병원', affiliationEn: 'Yonsei Severance Hospital', isASLS: 'N', expertiseTags: 'Bio-Stimulators' },
+                { name: '이영희', nameEn: 'Younghee Lee', affiliation: '삼성서울병원', affiliationEn: 'Samsung Medical Center', isASLS: 'Y', expertiseTags: 'Threads, Lifting Devices' }
+            ];
+            downloadExcel(data, 'speaker_sample.xlsx', 'Speakers');
+        }
+        
+        function downloadCompanyTemplate() {
+            const data = [
+                { name: '', nameEn: '', contact: '', email: '', phone: '', boothType: '', boothCount: '' }
+            ];
+            downloadExcel(data, 'company_template.xlsx', 'Companies');
+        }
+        
+        function downloadCompanySample() {
+            const data = [
+                { name: 'ABC 제약', nameEn: 'ABC Pharma', contact: '김담당', email: 'contact@abc.com', phone: '02-1234-5678', boothType: 'Diamond', boothCount: 2 },
+                { name: 'XYZ 메디컬', nameEn: 'XYZ Medical', contact: '이담당', email: 'sales@xyz.co.kr', phone: '02-9876-5432', boothType: 'Gold', boothCount: 1 },
+                { name: '메디케어', nameEn: 'MediCare', contact: '박담당', email: 'info@medicare.kr', phone: '031-555-1234', boothType: 'Silver', boothCount: 1 }
+            ];
+            downloadExcel(data, 'company_sample.xlsx', 'Companies');
+        }
+        
+        function downloadExcel(data, filename, sheetName) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            XLSX.writeFile(wb, filename);
+        }
+    </script>
+</body>
+</html>

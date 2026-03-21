@@ -1,0 +1,123 @@
+{
+  "rules": {
+    // 인증된 사용자만 접근 가능
+    ".read": "auth != null",
+    ".write": false,
+    
+    // 행사 목록
+    "eventList": {
+      ".read": "auth != null",
+      
+      "$eventId": {
+        // 행사 정보 읽기: 인증된 사용자 누구나
+        ".read": "auth != null",
+        
+        // 행사 생성: 인증된 사용자
+        ".write": "auth != null && !data.exists()",
+        
+        // 행사 수정: admin 멤버만
+        ".validate": "newData.hasChildren(['name', 'createdBy'])",
+        
+        "name": {
+          ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin'"
+        },
+        
+        "dates": {
+          ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin'"
+        },
+        
+        "roomsByDate": {
+          ".write": "auth != null && (root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin' || root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'editor')"
+        },
+        
+        "timeSettings": {
+          ".write": "auth != null && (root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin' || root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'editor')"
+        },
+        
+        "members": {
+          // 멤버 관리: admin만
+          ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin'",
+          
+          "$uid": {
+            ".validate": "newData.val() == 'admin' || newData.val() == 'editor' || newData.val() == 'pending'"
+          }
+        },
+        
+        // 기타 필드
+        ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin'"
+      }
+    },
+    
+    // 행사 데이터
+    "events": {
+      "$eventId": {
+        // 읽기: 해당 행사 멤버만
+        ".read": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).exists()",
+        
+        // 데이터 영역
+        "data": {
+          // 쓰기: admin 또는 editor
+          ".write": "auth != null && (root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin' || root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'editor')",
+          
+          "speakers": {
+            ".validate": "newData.isString() || newData.hasChildren()"
+          },
+          
+          "companies": {
+            ".validate": "newData.isString() || newData.hasChildren()"
+          },
+          
+          "dataByDate": {
+            "$date": {
+              "lectures": {
+                ".validate": true
+              },
+              "schedule": {
+                ".validate": true
+              },
+              "sessions": {
+                ".validate": true
+              }
+            }
+          }
+        },
+        
+        // 설정 영역
+        "settings": {
+          // 쓰기: admin만
+          ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin'"
+        },
+        
+        // 백업 영역
+        "backups": {
+          // 쓰기: admin 또는 editor
+          ".write": "auth != null && (root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'admin' || root.child('eventList').child($eventId).child('members').child(auth.uid).val() == 'editor')"
+        },
+        
+        // 히스토리/활동 로그
+        "history": {
+          ".write": "auth != null && root.child('eventList').child($eventId).child('members').child(auth.uid).exists()"
+        }
+      }
+    },
+    
+    // 사용자 정보
+    "users": {
+      "$uid": {
+        // 자신의 정보만 읽기/쓰기
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    
+    // 온라인 상태 (Presence)
+    "presence": {
+      "$eventId": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid == $uid"
+        }
+      }
+    }
+  }
+}
