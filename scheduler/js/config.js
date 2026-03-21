@@ -55,7 +55,7 @@ window.AppConfig = {
     // 카테고리 설정 (기본 템플릿 - 행사 생성 시 복사됨)
     // ============================================
     DEFAULT_CATEGORY_GROUPS: [
-        ['Coffee Break', 'Opening/Closing', 'Luncheon'],
+        ['Coffee Break', 'Opening-Closing', 'Luncheon'],
         ['Injectables', 'Laser & EBDs', 'Bio-Stimulators'],
         ['Aesthetic Devices', 'Lifting Devices', 'Body Contouring'],
         ['Regeneratives', 'Threads', 'Dermatology'],
@@ -70,7 +70,7 @@ window.AppConfig = {
     DEFAULT_CATEGORY_COLORS: {
         'Coffee Break': '#795548',
         'Lunch': '#5D4037',
-        'Opening/Closing': '#37474F',
+        'Opening-Closing': '#37474F',
         'Panel Discussion': '#424242',
         'Luncheon': '#FF8F00',
         'Injectables': '#E65100',
@@ -105,7 +105,7 @@ window.AppConfig = {
     categoryColors: {},
 
     // Break 타입 정의 (중복 배치 가능)
-    BREAK_TYPES: ['Coffee Break', 'Lunch', 'Opening/Closing', 'Panel Discussion'],
+    BREAK_TYPES: ['Coffee Break', 'Lunch', 'Opening-Closing', 'Panel Discussion'],
 
     // ============================================
     // 앱 버전 정보
