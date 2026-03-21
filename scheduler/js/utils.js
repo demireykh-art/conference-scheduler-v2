@@ -421,7 +421,34 @@
             }
         };
     };
-
+    // ============================================
+    // 드래그 앤 드롭 핸들러
+    // ============================================
+    
+    window.handleDragStart = function(e, lecture) {
+        AppState.draggedLecture = lecture;
+        AppState.draggedScheduleKey = null;
+        e.target.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify(lecture));
+    };
+    
+    window.handleDragEnd = function(e) {
+        e.target.classList.remove('dragging');
+        AppState.draggedLecture = null;
+        AppState.draggedScheduleKey = null;
+        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+    };
+    
+    window.handleDragOver = function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drop-target');
+    };
+    
+    window.handleDragLeave = function(e) {
+        e.currentTarget.classList.remove('drop-target');
+    };
 })();
 
 console.log('✅ utils.js 로드 완료');
