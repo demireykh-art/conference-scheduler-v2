@@ -306,6 +306,59 @@
         e.currentTarget.classList.remove('drop-target');
     };
     
+    /**
+     * 다중 연자 중복 체크
+     * speakerNames 배열 또는 speakerKo 문자열을 기준으로
+     * 같은 시간대(±이동시간) 다른 룸에 배치된 강의가 있는지 확인
+     */
+    function checkMultiSpeakerConflict(lecture, targetTime, targetRoom, excludeKey) {
+        const TRANSFER_MIN = AppConfig?.SPEAKER_TRANSFER_TIME || 10;
+
+        // 연자 목록 추출 (speakerNames 배열 우선, 없으면 speakerKo 파싱)
+        let names = [];
+        if (lecture.speakerNames && lecture.speakerNames.length > 0) {
+            names = lecture.speakerNames;
+        } else if (lecture.speakerKo) {
+            names = lecture.speakerKo.split(',').map(s => s.trim()).filter(s => s);
+        }
+        if (names.length === 0) return null;
+
+        const [tH, tM] = targetTime.split(':').map(Number);
+        const targetStart = tH * 60 + tM;
+        const targetEnd = targetStart + (lecture.duration || 20);
+
+        for (const [key, sched] of Object.entries(AppState.schedule || {})) {
+            if (key === excludeKey) continue;
+            const schedRoom = key.split('-').slice(1).join('-');
+            if (schedRoom === targetRoom) continue; // 같은 룸은 체크 불필요
+
+            const schedNames = sched.speakerNames && sched.speakerNames.length > 0
+                ? sched.speakerNames
+                : (sched.speakerKo || '').split(',').map(s => s.trim()).filter(s => s);
+
+            // 이름 교집합 확인
+            const overlap = names.filter(n => schedNames.includes(n));
+            if (overlap.length === 0) continue;
+
+            const [sH, sM] = sched._startTime
+                ? sched._startTime.split(':').map(Number)
+                : key.split('-')[0].split(':').map(Number);
+            const schedStart = sH * 60 + sM;
+            const schedEnd = schedStart + (sched.duration || 20);
+
+            // 이동시간 포함 시간 충돌 체크
+            if (targetStart < schedEnd + TRANSFER_MIN && targetEnd + TRANSFER_MIN > schedStart) {
+                return {
+                    names: overlap,
+                    conflictKey: key,
+                    conflictRoom: schedRoom,
+                    conflictTime: sched._startTime || key.split('-')[0]
+                };
+            }
+        }
+        return null;
+    }
+
     window.handleDrop = async function(e, time, room) {
         e.preventDefault();
         e.currentTarget.classList.remove('drop-target');
@@ -318,6 +371,13 @@
         // 이미 강의가 있는지 확인
         if (AppState.schedule[newKey] && AppState.draggedScheduleKey !== newKey) {
             Toast.warning('이미 강의가 배치되어 있습니다.');
+            return;
+        }
+
+        // ★ 다중 연자 중복 체크
+        const conflict = checkMultiSpeakerConflict(lecture, time, room, AppState.draggedScheduleKey);
+        if (conflict) {
+            Toast.error(`⚠️ 연자 중복: ${conflict.names.join(', ')}님이 ${conflict.conflictTime} ${conflict.conflictRoom}에 이미 배치되어 있습니다.`);
             return;
         }
         

@@ -162,7 +162,10 @@
             const sessionName = String(row[6] || '').trim();
             const title = String(row[7] || '').trim();
             const affiliation = String(row[8] || '').trim();
-            const speakerName = String(row[9] || '').trim();
+            const speakerRaw = String(row[9] || '').trim();
+            // 연자가 여러 명인 경우 쉼표로 구분 (예: "이규호, 최호성, 이정우")
+            const speakerNames = speakerRaw ? speakerRaw.split(',').map(s => s.trim()).filter(s => s) : [];
+            const speakerName = speakerNames.join(', '); // 표시용 문자열 (기존 호환)
             const productName = String(row[10] || '').trim();
             const companyName = String(row[11] || '').trim();
             
@@ -177,7 +180,8 @@
                 id: lectureId,
                 titleKo: title,
                 titleEn: '',
-                speakerKo: speakerName,
+                speakerKo: speakerName,         // 표시용 문자열 (기존 호환)
+                speakerNames: speakerNames,      // ★ 다중 연자 배열 (중복 체크용)
                 speakerEn: '',
                 affiliation: affiliation,
                 affiliationEn: '',
@@ -220,13 +224,15 @@
                 }
             }
             
-            // 연자 수집
-            if (speakerName && !speakers.has(speakerName)) {
-                speakers.set(speakerName, {
-                    name: speakerName,
-                    affiliation: affiliation
-                });
-            }
+            // 연자 수집 - 다중 연자 각각 등록
+            speakerNames.forEach(sName => {
+                if (sName && !speakers.has(sName)) {
+                    speakers.set(sName, {
+                        name: sName,
+                        affiliation: affiliation
+                    });
+                }
+            });
             
             if (companyName && companyName !== '학회강의') {
                 companies.add(companyName);
