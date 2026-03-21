@@ -1,12 +1,10 @@
 /**
- * lecture-import.js - 강의 일괄 업로드 모듈 (간소화 버전)
+ * lecture-import.js - 강의 일괄 업로드 모듈
  * 
- * 역할: 파일 업로드 + 기본 파싱 + 저장
- * 동선 검증은 schedule-validator.js에서 별도 처리
- * 
- * Excel 양식:
- * A: 룸명, B: 강의시간, C: 시작, D: 종료, E: 좌장/사회, F: 좌장명
- * G: 세션명, H: 제목, I: 병원명, J: 연자명, K: 제품명, L: 업체
+ * 기능:
+ * - Excel 파일 업로드 및 파싱
+ * - 기존 데이터와 병합 (덮어쓰기 X)
+ * - 룸별 개별 업로드 지원
  */
 
 (function() {
@@ -33,6 +31,9 @@
         if (dateInfo) {
             dateInfo.textContent = AppState.currentDate || '날짜 미선택';
         }
+        
+        // 병합 모드 기본값
+        document.getElementById('importMergeMode').checked = true;
     };
     
     function createLectureImportModal() {
@@ -48,13 +49,20 @@
                 <div class="modal-body" style="overflow-y: auto; max-height: calc(85vh - 140px);">
                     <div class="import-info" style="background: #f0f9ff; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                         <p><strong>📅 업로드 대상 날짜:</strong> <span id="lectureImportDate" style="color: #0369a1; font-weight: 600;"></span></p>
-                        <p style="font-size: 0.85rem; color: #666; margin-top: 8px;">
-                            💡 업로드 후 [🔍 동선검증] 버튼으로 전체 동선을 확인하세요.
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="importMergeMode" checked>
+                            <span><strong>병합 모드</strong> - 기존 강의 유지하고 새 강의 추가</span>
+                        </label>
+                        <p style="font-size: 0.85rem; color: #666; margin-top: 4px; margin-left: 24px;">
+                            체크 해제 시: 해당 날짜의 모든 강의를 새 파일로 교체
                         </p>
                     </div>
                     
                     <div class="form-group">
-                        <label>Excel 파일 선택</label>
+                        <label>Excel 파일 선택 (.xlsx 권장)</label>
                         <input type="file" id="lectureImportFile" accept=".xlsx,.xls,.csv" onchange="handleLectureFileUpload(event)">
                     </div>
                     
@@ -62,7 +70,7 @@
                         <summary style="cursor: pointer; font-weight: 600; padding: 8px; background: #f8f9fa; border-radius: 4px;">📋 Excel 양식 안내</summary>
                         <div style="background: #f8f9fa; padding: 12px; border-radius: 0 0 8px 8px; font-size: 0.85rem;">
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr><td style="padding: 4px; width: 60px;"><strong>A열</strong></td><td>룸명 (예: (토)1층 전시장A)</td></tr>
+                                <tr><td style="padding: 4px; width: 60px;"><strong>A열</strong></td><td>룸명 (예: 1층 전시장A Combination Lab)</td></tr>
                                 <tr><td style="padding: 4px;"><strong>B열</strong></td><td>강의시간 (분)</td></tr>
                                 <tr><td style="padding: 4px;"><strong>C열</strong></td><td>시작시간</td></tr>
                                 <tr><td style="padding: 4px;"><strong>D열</strong></td><td>종료시간</td></tr>
@@ -282,20 +290,25 @@
     
     function showLectureImportPreview(data) {
         const preview = document.getElementById('lectureImportPreview');
+        const mergeMode = document.getElementById('importMergeMode')?.checked;
+        
+        // 기존 데이터 정보
+        const existingLectures = AppState.lectures?.length || 0;
+        const existingRooms = AppState.rooms?.length || 0;
         
         let html = `
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
                 <div style="background: #dbeafe; padding: 12px; border-radius: 8px; text-align: center;">
                     <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">${data.lectures.length}</div>
-                    <div style="font-size: 0.85rem; color: #3b82f6;">강의</div>
+                    <div style="font-size: 0.85rem; color: #3b82f6;">새 강의</div>
                 </div>
                 <div style="background: #fef3c7; padding: 12px; border-radius: 8px; text-align: center;">
                     <div style="font-size: 1.5rem; font-weight: 700; color: #92400e;">${data.sessions.length}</div>
-                    <div style="font-size: 0.85rem; color: #f59e0b;">세션</div>
+                    <div style="font-size: 0.85rem; color: #f59e0b;">새 세션</div>
                 </div>
                 <div style="background: #d1fae5; padding: 12px; border-radius: 8px; text-align: center;">
                     <div style="font-size: 1.5rem; font-weight: 700; color: #065f46;">${data.rooms.length}</div>
-                    <div style="font-size: 0.85rem; color: #10b981;">룸</div>
+                    <div style="font-size: 0.85rem; color: #10b981;">새 룸</div>
                 </div>
                 <div style="background: #ede9fe; padding: 12px; border-radius: 8px; text-align: center;">
                     <div style="font-size: 1.5rem; font-weight: 700; color: #5b21b6;">${data.speakers.length}</div>
@@ -304,26 +317,39 @@
             </div>
         `;
         
+        // 병합 모드 안내
+        if (existingLectures > 0) {
+            html += `
+                <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <strong>📌 기존 데이터:</strong> ${existingLectures}개 강의, ${existingRooms}개 룸
+                    <br>
+                    <span style="font-size: 0.85rem; color: #92400e;">
+                        ${mergeMode ? '✅ 병합 모드: 기존 강의 유지 + 새 강의 추가' : '⚠️ 교체 모드: 모든 강의 삭제 후 새로 등록'}
+                    </span>
+                </div>
+            `;
+        }
+        
         // 룸 목록
         html += `
             <div style="margin-bottom: 16px;">
-                <strong>🚪 룸:</strong>
+                <strong>🚪 업로드할 룸:</strong>
                 <span style="color: #666; font-size: 0.9rem; margin-left: 8px;">
-                    ${data.rooms.map(r => r.replace(/^\([토일]\)/, '')).join(', ')}
+                    ${data.rooms.join(', ')}
                 </span>
             </div>
         `;
         
-        // 강의 테이블 (간략)
+        // 강의 테이블
         html += `
             <div style="max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
                     <thead>
                         <tr style="background: #f1f5f9; position: sticky; top: 0;">
                             <th style="padding: 8px; text-align: left;">시간</th>
+                            <th style="padding: 8px; text-align: left;">룸</th>
                             <th style="padding: 8px; text-align: left;">제목</th>
                             <th style="padding: 8px; text-align: left;">연자</th>
-                            <th style="padding: 8px; text-align: left;">업체</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -333,9 +359,9 @@
             html += `
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 6px 8px;">${lec._startTime}</td>
+                    <td style="padding: 6px 8px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${lec._room}</td>
                     <td style="padding: 6px 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${lec.titleKo || '-'}</td>
                     <td style="padding: 6px 8px;">${lec.speakerKo || '-'}</td>
-                    <td style="padding: 6px 8px;">${lec.isLuncheon ? '🎓' : lec.companyName}</td>
                 </tr>
             `;
         });
@@ -346,19 +372,12 @@
         
         html += '</tbody></table></div>';
         
-        // 안내 메시지
-        html += `
-            <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 0.85rem;">
-                💡 저장 후 <strong>[🔍 동선검증]</strong> 버튼을 클릭하여 연자/좌장 동선을 확인하세요.
-            </div>
-        `;
-        
         preview.innerHTML = html;
         document.getElementById('lectureImportSaveBtn').disabled = false;
     }
 
     // ============================================
-    // 저장
+    // 저장 (병합 지원)
     // ============================================
     
     window.saveLectureImport = async function() {
@@ -372,35 +391,94 @@
             return;
         }
         
-        const confirmMsg = `${AppState.currentDate}에 ${parsedImportData.lectures.length}개 강의를 등록하시겠습니까?`;
+        const mergeMode = document.getElementById('importMergeMode')?.checked;
+        
+        const confirmMsg = mergeMode
+            ? `${parsedImportData.lectures.length}개 강의를 기존 데이터에 추가하시겠습니까?`
+            : `기존 강의를 모두 삭제하고 ${parsedImportData.lectures.length}개 강의로 교체하시겠습니까?`;
+        
         if (!confirm(confirmMsg)) return;
         
         try {
             Toast.info('저장 중...');
             
-            // 1. 룸 설정
-            await updateRoomSettings(parsedImportData.rooms);
+            let finalLectures, finalSchedule, finalSessions, finalRooms;
             
-            // 2. 강의 목록
-            const lectures = parsedImportData.lectures.map(lec => ({
-                id: lec.id,
-                titleKo: lec.titleKo,
-                titleEn: lec.titleEn,
-                speakerKo: lec.speakerKo,
-                speakerEn: lec.speakerEn,
-                affiliation: lec.affiliation,
-                duration: lec.duration,
-                category: lec.category,
-                companyName: lec.companyName,
-                productName: lec.productName,
-                isLuncheon: lec.isLuncheon
-            }));
-            
-            // 3. 스케줄
-            const schedule = {};
-            parsedImportData.lectures.forEach(lec => {
-                const key = `${lec._startTime}-${lec._room}`;
-                schedule[key] = {
+            if (mergeMode) {
+                // ===== 병합 모드 =====
+                
+                // 기존 데이터
+                const existingLectures = AppState.lectures || [];
+                const existingSchedule = AppState.schedule || {};
+                const existingSessions = AppState.sessions || [];
+                const existingRooms = AppState.rooms || [];
+                
+                // 새 강의 추가
+                finalLectures = [...existingLectures];
+                finalSchedule = { ...existingSchedule };
+                finalSessions = [...existingSessions];
+                
+                // 새 룸 병합 (중복 제거)
+                const roomSet = new Set(existingRooms);
+                parsedImportData.rooms.forEach(room => roomSet.add(room));
+                finalRooms = Array.from(roomSet);
+                
+                // 새 강의 추가
+                parsedImportData.lectures.forEach(lec => {
+                    const key = `${lec._startTime}-${lec._room}`;
+                    
+                    // 같은 시간/룸에 강의가 있으면 스킵 또는 경고
+                    if (finalSchedule[key]) {
+                        console.warn(`중복 스킵: ${key}`);
+                        return;
+                    }
+                    
+                    // lectures 배열에 추가
+                    finalLectures.push({
+                        id: lec.id,
+                        titleKo: lec.titleKo,
+                        speakerKo: lec.speakerKo,
+                        affiliation: lec.affiliation,
+                        duration: lec.duration,
+                        category: lec.category,
+                        companyName: lec.companyName,
+                        productName: lec.productName,
+                        isLuncheon: lec.isLuncheon
+                    });
+                    
+                    // schedule에 추가
+                    finalSchedule[key] = {
+                        id: lec.id,
+                        titleKo: lec.titleKo,
+                        speakerKo: lec.speakerKo,
+                        affiliation: lec.affiliation,
+                        duration: lec.duration,
+                        category: lec.category,
+                        companyName: lec.companyName,
+                        productName: lec.productName,
+                        isLuncheon: lec.isLuncheon
+                    };
+                });
+                
+                // 새 세션 추가 (같은 이름 없으면)
+                parsedImportData.sessions.forEach(session => {
+                    const exists = finalSessions.some(s => s.name === session.name && s.room === session.room);
+                    if (!exists) {
+                        finalSessions.push({
+                            id: session.id,
+                            name: session.name,
+                            room: session.room,
+                            time: session.time,
+                            duration: session.duration,
+                            moderator: session.moderator
+                        });
+                    }
+                });
+                
+            } else {
+                // ===== 교체 모드 =====
+                
+                finalLectures = parsedImportData.lectures.map(lec => ({
                     id: lec.id,
                     titleKo: lec.titleKo,
                     speakerKo: lec.speakerKo,
@@ -410,52 +488,70 @@
                     companyName: lec.companyName,
                     productName: lec.productName,
                     isLuncheon: lec.isLuncheon
-                };
-            });
+                }));
+                
+                finalSchedule = {};
+                parsedImportData.lectures.forEach(lec => {
+                    const key = `${lec._startTime}-${lec._room}`;
+                    finalSchedule[key] = {
+                        id: lec.id,
+                        titleKo: lec.titleKo,
+                        speakerKo: lec.speakerKo,
+                        affiliation: lec.affiliation,
+                        duration: lec.duration,
+                        category: lec.category,
+                        companyName: lec.companyName,
+                        productName: lec.productName,
+                        isLuncheon: lec.isLuncheon
+                    };
+                });
+                
+                finalSessions = parsedImportData.sessions.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    room: s.room,
+                    time: s.time,
+                    duration: s.duration,
+                    moderator: s.moderator
+                }));
+                
+                finalRooms = parsedImportData.rooms;
+            }
             
-            // 4. 세션
-            const sessions = parsedImportData.sessions.map(s => ({
-                id: s.id,
-                name: s.name,
-                room: s.room,
-                time: s.time,
-                duration: s.duration,
-                moderator: s.moderator
-            }));
+            // 룸 설정 저장
+            await updateRoomSettings(finalRooms);
             
-            // 5. Firebase 저장
+            // Firebase 저장
             if (typeof eventRef === 'function') {
                 const dateDataRef = eventRef(`data/dataByDate/${AppState.currentDate}`);
                 if (dateDataRef) {
                     await dateDataRef.set({
-                        lectures: lectures,
-                        schedule: schedule,
-                        sessions: sessions
+                        lectures: finalLectures,
+                        schedule: finalSchedule,
+                        sessions: finalSessions
                     });
                 }
             }
             
-            // 6. 연자/업체 병합
+            // 연자/업체 병합
             await mergeSpeakers(parsedImportData.speakers);
             await mergeCompanies(parsedImportData.companies);
             
-            // 7. 로컬 상태
-            AppState.lectures = lectures;
-            AppState.schedule = schedule;
-            AppState.sessions = sessions;
-            AppState.rooms = parsedImportData.rooms;
+            // 로컬 상태 업데이트
+            AppState.lectures = finalLectures;
+            AppState.schedule = finalSchedule;
+            AppState.sessions = finalSessions;
+            AppState.rooms = finalRooms;
             
-            // 8. UI 업데이트
+            // UI 업데이트
             if (typeof createRoomTabs === 'function') createRoomTabs();
             if (typeof createScheduleTable === 'function') createScheduleTable();
             if (typeof updateScheduleDisplay === 'function') updateScheduleDisplay();
             if (typeof updateLectureList === 'function') updateLectureList();
             
-            Toast.success(`${lectures.length}개 강의 저장 완료! 🔍 동선검증을 확인하세요.`);
+            const modeText = mergeMode ? '병합' : '교체';
+            Toast.success(`${finalLectures.length}개 강의 ${modeText} 완료!`);
             closeLectureImportModal();
-            
-            // 동선검증 패널 자동 열기 (선택)
-            // if (typeof openScheduleValidator === 'function') openScheduleValidator();
             
         } catch (error) {
             console.error('저장 실패:', error);
@@ -505,12 +601,12 @@
     window.downloadLectureTemplate = function() {
         const data = [
             ['룸명', '강의시간입력', '시작', '종료', '좌장/사회', '좌장명', '세션명', '제목', '병원명', '연자명', '제품명', '업체'],
-            ['(토)1층 전시장A', 20, '15:00', '15:20', '좌장', '홍길동', 'Session 1', '강의 제목', '서울의원', '김철수', '', '학회강의'],
-            ['(토)1층 전시장A', 20, '15:20', '15:40', '좌장', '홍길동', 'Session 1', '제품 강의', '연세의원', '이영희', '제품A', 'ABC제약']
+            ['1층 전시장A', 20, '15:00', '15:20', '좌장', '홍길동', 'Session 1', '강의 제목', '서울의원', '김철수', '', '학회강의'],
+            ['1층 전시장A', 20, '15:20', '15:40', '좌장', '홍길동', 'Session 1', '제품 강의', '연세의원', '이영희', '제품A', 'ABC제약']
         ];
         
         const ws = XLSX.utils.aoa_to_sheet(data);
-        ws['!cols'] = [{ wch: 30 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+        ws['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
         
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Lectures');
