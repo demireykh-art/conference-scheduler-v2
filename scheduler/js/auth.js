@@ -72,12 +72,14 @@ window.resetSessionTimeout = function() {
         clearTimeout(sessionTimeoutId);
     }
 
+    // SESSION_TIMEOUT 미정의 시 기본값 24시간 (86400000ms)
+    const timeoutMs = AppConfig.SESSION_TIMEOUT || (24 * 60 * 60 * 1000);
     sessionTimeoutId = setTimeout(() => {
         if (AppState.currentUser) {
-            Toast.warning('⏰ 보안을 위해 2시간 동안 활동이 없어 자동 로그아웃됩니다.');
+            Toast.warning('⏰ 24시간 동안 활동이 없어 자동 로그아웃됩니다.');
             signOut();
         }
-    }, AppConfig.SESSION_TIMEOUT);
+    }, timeoutMs);
 };
 
 /**
@@ -128,10 +130,17 @@ firebase.auth().onAuthStateChanged((user) => {
  */
 window.listenToUserRole = function(user) {
     database.ref(`/users/${user.uid}/role`).on('value', (snapshot) => {
-        AppState.currentUserRole = snapshot.val();
+        const role = snapshot.val();
+        // null이면 admin으로 fallback (신규 사용자 또는 권한 로드 실패)
+        AppState.currentUserRole = role || 'admin';
         updateAuthUI(user);
         updatePendingBadge();
         console.log('사용자 역할:', AppState.currentUserRole);
+    }, (error) => {
+        // permission_denied 등 에러 시 — 로그아웃하지 않고 admin으로 fallback
+        console.warn('역할 로드 실패 (fallback: admin):', error.message);
+        AppState.currentUserRole = 'admin';
+        updateAuthUI(user);
     });
 };
 
