@@ -10,7 +10,7 @@ let lastActivityTime = Date.now();
  */
 window.signInWithGoogle = function() {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
+    firebase.auth().signInWithPopup(provider)
         .then((result) => {
             console.log('로그인 성공:', result.user.email);
             registerOrCheckUser(result.user);
@@ -25,7 +25,7 @@ window.signInWithGoogle = function() {
  * 로그아웃
  */
 window.signOut = function() {
-    auth.signOut().then(() => {
+    firebase.auth().signOut().then(() => {
         console.log('로그아웃됨');
         AppState.currentUserRole = null;
     });
@@ -98,7 +98,7 @@ window.setupActivityListeners = function() {
 /**
  * 인증 상태 리스너
  */
-auth.onAuthStateChanged((user) => {
+firebase.auth().onAuthStateChanged((user) => {
     AppState.currentUser = user;
 
     if (user) {
