@@ -536,8 +536,15 @@
             </div>
             <div class="header-right">
                 <span id="userInfo" class="user-info"></span>
-                <button class="btn btn-primary btn-small edit-only" onclick="openLectureImportModal()">📥 강의업로드</button>
-                <button class="btn btn-secondary btn-small" onclick="openScheduleValidator()">🔍 동선검증</button>
+                <!-- 버튼 그룹 3: 데이터 관리 -->
+                <div class="btn-group" style="display: flex; gap: 0.2rem; padding: 0.2rem; background: rgba(255,255,255,0.1); border-radius: 6px;">
+                    <button class="btn btn-primary btn-small" onclick="openUploadModal()" title="강의 업로드">📤 업로드</button>
+                    <button class="btn btn-primary btn-small edit-only" onclick="openLectureImportModal()" title="강의 일괄 업로드">📥 강의업로드</button>
+                    <button class="btn btn-secondary btn-small" onclick="openScheduleValidator()" title="동선 검증">🔍 동선검증</button>
+                    <button class="btn btn-secondary btn-small edit-only" onclick="openTimeSettingsModal()" title="시간 설정">⏰ 시간설정</button>
+                    <button class="btn btn-secondary btn-small" onclick="openBackupModal()" title="백업 관리">💾 백업</button>
+                    <button class="btn btn-secondary btn-small" onclick="openSponsorManagementModal()" title="파트너사 강의 관리">🏢 파트너사</button>
+                </div>
                 <button class="btn btn-secondary btn-small edit-only" onclick="openSpeakerUploadModal()">📋 연자</button>
                 <button class="btn btn-secondary btn-small edit-only" onclick="openCompanyUploadModal()">🏢 업체</button>
                 <button class="btn btn-secondary btn-small" onclick="signOut()">로그아웃</button>
