@@ -51,7 +51,7 @@
      */
     async function checkAuthState() {
         return new Promise((resolve) => {
-            auth.onAuthStateChanged(async (user) => {
+            firebase.auth().onAuthStateChanged(async (user) => {
                 if (user) {
                     AppState.currentUser = user;
                     console.log('👤 로그인됨:', user.email);

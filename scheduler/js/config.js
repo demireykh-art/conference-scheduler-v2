@@ -10,6 +10,26 @@
 (function() {
     'use strict';
 
+// ============================================
+// Firebase 초기화 — 반드시 다른 모듈보다 먼저 실행
+// ============================================
+const firebaseConfig = {
+    apiKey: "AIzaSyDw-hivDT9T-Iq3s3kiuTRqaumicSoWdcU",
+    authDomain: "scheduler2-99724.firebaseapp.com",
+    databaseURL: "https://scheduler2-99724-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "scheduler2-99724",
+    storageBucket: "scheduler2-99724.firebasestorage.app",
+    messagingSenderId: "1023522399376",
+    appId: "1:1023522399376:web:201a526635a7058917e415"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+window.auth     = firebase.auth();
+window.database = firebase.database();
+console.log('🔥 Firebase 초기화 완료');
+
     // ============================================
     // 기본 설정
     // ============================================
