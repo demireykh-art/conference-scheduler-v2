@@ -2108,3 +2108,617 @@ body {
 .sidebar-content {
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+
+/* ============================================
+   V2 추가 스타일 - Sticky Header/Column
+   ============================================ */
+
+/* 시간표 Wrapper 스크롤 개선 */
+.schedule-table-wrapper {
+    max-height: calc(100vh - 180px);
+}
+
+/* Sticky 헤더 행 강화 */
+.schedule-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.schedule-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* Sticky 첫 번째 열 (시간) 강화 */
+.schedule-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    background: var(--bg);
+}
+
+/* 헤더 + 첫 열 교차점 */
+.schedule-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 200;
+}
+
+/* ============================================
+   V2 추가 - 룸 탭 UI
+   ============================================ */
+
+.room-tabs-container {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+}
+
+.room-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+}
+
+.room-tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: white;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.2s;
+    color: var(--text);
+}
+
+.room-tab:hover {
+    background: #f0e6f5;
+}
+
+.room-tab.active {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    border-color: var(--primary);
+}
+
+/* ============================================
+   V2 추가 - 사이드바 접기/펼치기 개선
+   ============================================ */
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+}
+
+.sidebar-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.sidebar-collapse-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.sidebar-collapse-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* ============================================
+   V2 추가 - Rowspan 강의 카드
+   ============================================ */
+
+.scheduled-lecture {
+    height: auto;
+    min-height: 100%;
+}
+
+/* 긴 강의 카드 스타일 (rowspan > 2) */
+.scheduled-lecture.tall-card {
+    padding: 0.5rem;
+}
+
+.scheduled-lecture.tall-card .lecture-title-display {
+    -webkit-line-clamp: 4;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.scheduled-lecture.tall-card .lecture-meta-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+}
+
+/* ============================================
+   V2 추가 - 업로드 프리뷰 테이블
+   ============================================ */
+
+.upload-summary {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.upload-summary p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+}
+
+.upload-table-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.upload-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.upload-preview-table th,
+.upload-preview-table td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.upload-preview-table th {
+    background: var(--bg);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.upload-preview-table .new-row {
+    background: #e8f5e9;
+}
+
+.upload-preview-table .update-row {
+    background: #fff8e1;
+}
+
+/* ============================================
+   V2 추가 - 시간 설정 모달
+   ============================================ */
+
+.time-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.time-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.time-row label {
+    width: 80px;
+    font-weight: 600;
+}
+
+.time-row input[type="time"],
+.time-row select {
+    flex: 1;
+    padding: 0.5rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   V2 추가 - 동선 검증 결과
+   ============================================ */
+
+.validation-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.validation-item {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.validation-item.error {
+    background: #ffebee;
+    border-left: 4px solid #e53935;
+}
+
+.validation-item.warning {
+    background: #fff8e1;
+    border-left: 4px solid #ffc107;
+}
+
+.validation-item.info {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.validation-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.validation-content {
+    flex: 1;
+}
+
+.validation-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.validation-detail {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+/* ============================================
+   V2 추가 - 행사 로비
+   ============================================ */
+
+.event-lobby-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #F8F7FC 0%, #EDE9F5 100%);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.event-lobby-overlay.hidden {
+    display: none;
+}
+
+.event-lobby {
+    width: 100%;
+    max-width: 900px;
+}
+
+.event-lobby-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.event-lobby-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.event-lobby-header p {
+    color: var(--text-light);
+}
+
+.event-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.event-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+}
+
+.event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--shadow);
+}
+
+.event-card.current {
+    border-color: var(--accent);
+}
+
+.event-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.event-card .event-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: transparent;
+    padding: 0;
+}
+
+.current-badge {
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.event-card-body {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.event-card-body p {
+    margin: 4px 0;
+}
+
+.event-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ============================================
+   V2 추가 - 활동 하이라이트
+   ============================================ */
+
+.recently-updated {
+    animation: highlightFade 5s ease-out;
+}
+
+@keyframes highlightFade {
+    0% {
+        background-color: #c8e6c9;
+        box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.3);
+    }
+    100% {
+        background-color: transparent;
+        box-shadow: none;
+    }
+}
+
+/* ============================================
+   V2 추가 - 편집 모드 전용
+   ============================================ */
+
+.edit-only {
+    display: none;
+}
+
+body.edit-mode .edit-only {
+    display: inline-flex;
+}
+
+body.view-mode .edit-only {
+    display: none !important;
+}
+
+/* ============================================
+   V2 추가 - 단일 룸 뷰
+   ============================================ */
+
+.single-room-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.single-room-container .room-header {
+    padding: 1rem 1.5rem;
+    background: var(--primary);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.single-room-container .room-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.kma-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.timeline-container {
+    background: white;
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+}
+
+.timeline-session {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.timeline-session .session-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+}
+
+.timeline-session .session-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.timeline-session .session-meta {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin-top: 0.25rem;
+}
+
+.timeline-session .session-content {
+    padding: 0.5rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-item:hover {
+    background: var(--bg);
+}
+
+.timeline-time {
+    width: 70px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.timeline-time .start-time {
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: block;
+}
+
+.timeline-time .end-time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.timeline-time .duration {
+    font-size: 0.7rem;
+    color: var(--accent);
+    margin-top: 2px;
+}
+
+.timeline-content {
+    flex: 1;
+    cursor: pointer;
+}
+
+.timeline-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.timeline-title-en {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.timeline-speaker {
+    font-size: 0.85rem;
+    color: var(--text);
+}
+
+.timeline-speaker .speaker-affiliation {
+    color: var(--text-light);
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.timeline-sponsor {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: 0.25rem;
+}
+
+.timeline-category {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+/* ============================================
+   V2 추가 - 반응형 개선
+   ============================================ */
+
+@media (max-width: 768px) {
+    .room-tabs {
+        padding: 0.5rem;
+    }
+    
+    .room-tab {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .event-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-item {
+        flex-wrap: wrap;
+    }
+    
+    .timeline-category {
+        width: auto;
+        margin-top: 0.5rem;
+    }
+}
+
+/* ============================================
+   V2 추가 - 토스트 알림 개선
+   ============================================ */
+
+#toast-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 9999;
+}
+
