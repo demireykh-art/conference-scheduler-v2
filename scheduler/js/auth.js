@@ -101,8 +101,10 @@ window.setupActivityListeners = function() {
 firebase.auth().onAuthStateChanged((user) => {
     AppState.currentUser = user;
 
+    const loginOverlay = document.getElementById('loginOverlay');
+
     if (user) {
-        document.getElementById('loginOverlay').classList.add('hidden');
+        if (loginOverlay) loginOverlay.classList.add('hidden');
         resetSessionTimeout();
         listenToUserRole(user);
         registerOnlinePresence(user);
@@ -110,7 +112,7 @@ firebase.auth().onAuthStateChanged((user) => {
         registerOrCheckUser(user);
         console.log('로그인됨:', user.email);
     } else {
-        document.getElementById('loginOverlay').classList.remove('hidden');
+        if (loginOverlay) loginOverlay.classList.remove('hidden');
         AppState.currentUserRole = null;
         updateAuthUI(null);
 
@@ -137,48 +139,51 @@ window.listenToUserRole = function(user) {
  * 인증 UI 업데이트
  */
 window.updateAuthUI = function(user) {
-    const authStatus = document.getElementById('authStatus');
-    const adminOnlyBtns = document.querySelectorAll('.admin-only-btn');
+    try {
+        const userInfo = document.getElementById('userInfo');
+        if (!userInfo) return;
 
-    if (user) {
-        let roleText = '';
-        let roleColor = '';
+        const editOnlyBtns = document.querySelectorAll('.edit-only');
 
-        switch (AppState.currentUserRole) {
-            case 'admin':
-                roleText = '👑 관리자';
-                roleColor = '#f39c12';
-                adminOnlyBtns.forEach(btn => btn.style.display = '');
-                break;
-            case 'editor':
-                roleText = '✏️ 편집자';
-                roleColor = '#27ae60';
-                adminOnlyBtns.forEach(btn => btn.style.display = 'none');
-                break;
-            case 'pending':
-                roleText = '⏳ 승인대기';
-                roleColor = '#e74c3c';
-                adminOnlyBtns.forEach(btn => btn.style.display = 'none');
-                break;
-            default:
-                roleText = '로딩...';
-                roleColor = '#999';
-                adminOnlyBtns.forEach(btn => btn.style.display = 'none');
+        if (user) {
+            let roleText = '로딩...';
+            let roleColor = '#999';
+            let canEdit = false;
+
+            switch (AppState.currentUserRole) {
+                case 'admin':
+                    roleText = '👑 관리자';
+                    roleColor = '#f39c12';
+                    canEdit = true;
+                    break;
+                case 'editor':
+                    roleText = '✏️ 편집자';
+                    roleColor = '#27ae60';
+                    canEdit = true;
+                    break;
+                case 'pending':
+                    roleText = '⏳ 승인대기';
+                    roleColor = '#e74c3c';
+                    canEdit = false;
+                    break;
+            }
+
+            editOnlyBtns.forEach(btn => {
+                btn.style.display = canEdit ? '' : 'none';
+            });
+
+            userInfo.innerHTML = `
+                <img src="${user.photoURL || 'https://via.placeholder.com/28'}" alt=""
+                     style="width:24px;height:24px;border-radius:50%;vertical-align:middle;">
+                <span style="margin:0 6px;font-size:0.9rem;">${user.displayName || user.email}</span>
+                <span style="color:${roleColor};font-size:0.75rem;">${roleText}</span>
+            `;
+        } else {
+            userInfo.innerHTML = '';
+            editOnlyBtns.forEach(btn => { btn.style.display = 'none'; });
         }
-
-        authStatus.innerHTML = `
-            <img class="user-photo" src="${user.photoURL || 'https://via.placeholder.com/28'}" alt="">
-            <span class="user-name">${user.displayName || user.email}</span>
-            <span style="color:${roleColor}; font-size:0.7rem;">${roleText}</span>
-            <button class="logout-btn" onclick="signOut()">로그아웃</button>
-        `;
-    } else {
-        authStatus.innerHTML = `
-            <button class="login-btn" onclick="signInWithGoogle()">
-                🔐 로그인
-            </button>
-        `;
-        adminOnlyBtns.forEach(btn => btn.style.display = 'none');
+    } catch(e) {
+        console.warn('updateAuthUI 오류 (무시):', e.message);
     }
 };
 
@@ -218,15 +223,17 @@ window.isAdmin = function() {
  * 대기 중인 사용자 수 배지 업데이트
  */
 window.updatePendingBadge = function() {
+    // pendingBadge 요소가 없는 UI에서는 조용히 종료
+    const badge = document.getElementById('pendingBadge');
+    if (!badge) return;
+
     if (!isAdmin()) {
-        document.getElementById('pendingBadge').style.display = 'none';
+        badge.style.display = 'none';
         return;
     }
 
     database.ref('/users').orderByChild('role').equalTo('pending').once('value', (snapshot) => {
         const count = snapshot.numChildren();
-        const badge = document.getElementById('pendingBadge');
-
         if (count > 0) {
             badge.textContent = count;
             badge.style.display = 'flex';
@@ -272,11 +279,15 @@ window.listenToOnlineUsers = function() {
         const avatarsDiv = document.getElementById('userAvatars');
         const countSpan = document.getElementById('onlineCount');
 
-        avatarsDiv.innerHTML = userList.slice(0, 5).map(u =>
-            `<img class="user-avatar" src="${u.photoURL || 'https://via.placeholder.com/24'}" title="${u.displayName || u.email}">`
-        ).join('');
-
-        countSpan.textContent = `${userList.length}명 접속`;
+        // 요소가 없으면 조용히 종료
+        if (avatarsDiv) {
+            avatarsDiv.innerHTML = userList.slice(0, 5).map(u =>
+                `<img class="user-avatar" src="${u.photoURL || 'https://via.placeholder.com/24'}" title="${u.displayName || u.email}">`
+            ).join('');
+        }
+        if (countSpan) {
+            countSpan.textContent = `${userList.length}명 접속`;
+        }
     });
 };
 
