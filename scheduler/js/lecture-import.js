@@ -127,7 +127,11 @@
                     return;
                 }
                 
-                const rows = jsonData.slice(1).filter(row => row && row.length > 0 && row[0]);
+                // 1행이 헤더(시간값 없음)면 slice(1), 데이터면 slice(0)
+                const firstRow = jsonData[0] || [];
+                const firstRowHasTime = firstRow.some((v, i) => (i === 2 || i === 3) && v && String(v).includes(':'));
+                const firstRowIsHeader = !firstRowHasTime && firstRow[0] && !String(firstRow[0]).startsWith('(');
+                const rows = jsonData.slice(firstRowIsHeader ? 1 : 0).filter(row => row && row.length > 0 && row[0]);
                 
                 if (rows.length === 0) {
                     Toast.warning('유효한 데이터가 없습니다.');

@@ -16,18 +16,51 @@
         modal.id = 'uploadModal';
         modal.className = 'modal-overlay';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width:700px; max-height:85vh; overflow-y:auto;">
+            <div class="modal-content" style="max-width:760px; max-height:88vh; overflow-y:auto;">
                 <div class="modal-header">
                     <h2>📤 강의 데이터 업로드</h2>
                     <button class="btn btn-secondary btn-small" onclick="closeUploadModal()">✕</button>
                 </div>
                 <div class="modal-body">
-                    <div id="uploadDropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:40px;text-align:center;cursor:pointer;margin-bottom:16px;">
-                        <p style="font-size:1.1rem;color:#64748b;">📁 Excel/CSV 파일을 드래그하거나 클릭하여 선택</p>
+                    <!-- 드롭존 -->
+                    <div id="dropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;transition:background 0.2s;">
+                        <p style="font-size:1.05rem;color:#64748b;margin:0 0 12px;">📁 Excel/CSV 파일을 드래그하거나 클릭하여 선택</p>
+                        <p style="font-size:0.85rem;color:#94a3b8;margin:0 0 12px;">지원 형식: .xlsx, .xls, .csv</p>
                         <input type="file" id="uploadFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFileSelect(event)">
-                        <button class="btn btn-secondary" onclick="document.getElementById('uploadFileInput').click()">파일 선택</button>
+                        <button class="btn btn-secondary btn-small" id="selectFileBtn">파일 선택</button>
                     </div>
-                    <div id="uploadPreview"></div>
+
+                    <!-- 중복 경고 -->
+                    <div id="duplicateWarning" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:12px;">
+                        <strong>⚠️ 중복 강의 <span id="duplicateCount">0</span>개 감지</strong>
+                        <div id="duplicateOptionsSection" style="margin-top:8px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="radio" name="duplicateOption" value="skip" checked>
+                                중복 <span id="skipDuplicateCount">0</span>개 건너뛰기
+                            </label>
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:4px;">
+                                <input type="radio" name="duplicateOption" value="replace">
+                                중복 항목 덮어쓰기
+                            </label>
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:4px;">
+                                <input type="checkbox" id="replaceAllMode">
+                                전체 데이터 교체 (기존 데이터 삭제 후 업로드)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 미리보기 -->
+                    <div id="uploadPreview" style="display:none;">
+                        <p style="font-size:0.9rem;color:#475569;margin-bottom:8px;">
+                            총 <strong id="previewCount">0</strong>개 강의 미리보기
+                        </p>
+                        <div style="overflow-x:auto;max-height:320px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;">
+                            <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                                <thead id="previewTableHeader" style="background:#f8fafc;position:sticky;top:0;"></thead>
+                                <tbody id="previewTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" onclick="closeUploadModal()">취소</button>
