@@ -11,18 +11,50 @@
     // 모달 관리
     // ============================================
     
+    function createUploadModalHTML() {
+        const modal = document.createElement('div');
+        modal.id = 'uploadModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:700px; max-height:85vh; overflow-y:auto;">
+                <div class="modal-header">
+                    <h2>📤 강의 데이터 업로드</h2>
+                    <button class="btn btn-secondary btn-small" onclick="closeUploadModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div id="uploadDropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:40px;text-align:center;cursor:pointer;margin-bottom:16px;">
+                        <p style="font-size:1.1rem;color:#64748b;">📁 JSON 파일을 드래그하거나 클릭하여 선택</p>
+                        <input type="file" id="uploadFileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('uploadFileInput').click()">파일 선택</button>
+                    </div>
+                    <div id="uploadPreview"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeUploadModal()">취소</button>
+                    <button class="btn btn-primary" id="confirmUploadBtn" onclick="confirmUpload()" disabled>업로드 확인</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        return modal;
+    }
+
     function openUploadModal() {
-        if (!window.checkEditPermission()) {
+        if (typeof window.checkEditPermission === 'function' && !window.checkEditPermission()) {
             Toast.warning('편집 권한이 없습니다.');
             return;
         }
-        document.getElementById('uploadModal').classList.add('active');
+        // 모달이 없으면 동적 생성
+        let modal = document.getElementById('uploadModal');
+        if (!modal) modal = createUploadModalHTML();
+        modal.classList.add('active');
         clearUploadPreview();
         setupDropZone();
     }
     
     function closeUploadModal() {
-        document.getElementById('uploadModal').classList.remove('active');
+        const modal = document.getElementById('uploadModal');
+        if (modal) modal.classList.remove('active');
         clearUploadPreview();
     }
     
@@ -594,18 +626,49 @@
     // 배치 완료 파일 업로드
     // ============================================
     
+    function createScheduleUploadModalHTML() {
+        const modal = document.createElement('div');
+        modal.id = 'scheduleUploadModal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:700px; max-height:85vh; overflow-y:auto;">
+                <div class="modal-header">
+                    <h2>📋 배치 완료 스케줄 업로드</h2>
+                    <button class="btn btn-secondary btn-small" onclick="closeScheduleUploadModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div id="scheduleUploadDropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:40px;text-align:center;cursor:pointer;margin-bottom:16px;">
+                        <p style="font-size:1.1rem;color:#64748b;">📁 Excel/CSV 파일을 드래그하거나 클릭하여 선택</p>
+                        <input type="file" id="scheduleUploadFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleScheduleFileSelect(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('scheduleUploadFileInput').click()">파일 선택</button>
+                    </div>
+                    <div id="scheduleUploadPreview" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeScheduleUploadModal()">취소</button>
+                    <button class="btn btn-primary" id="confirmScheduleUploadBtn" onclick="confirmScheduleUpload()" disabled>업로드 확인</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        return modal;
+    }
+
     function openScheduleUploadModal() {
         if (!window.checkEditPermission()) {
             Toast.warning('편집 권한이 없습니다.');
             return;
         }
-        document.getElementById('scheduleUploadModal').classList.add('active');
+        let modal = document.getElementById('scheduleUploadModal');
+        if (!modal) modal = createScheduleUploadModalHTML();
+        modal.classList.add('active');
         clearScheduleUploadPreview();
         setupScheduleDropZone();
     }
     
     function closeScheduleUploadModal() {
-        document.getElementById('scheduleUploadModal').classList.remove('active');
+        const modal = document.getElementById('scheduleUploadModal');
+        if (modal) modal.classList.remove('active');
         clearScheduleUploadPreview();
     }
     
