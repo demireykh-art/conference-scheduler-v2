@@ -10,6 +10,45 @@
  */
 
 // ============================================
+// Firebase 경로 헬퍼 함수 (전역 공유)
+// ============================================
+
+/**
+ * eventList 루트 참조
+ * /eventList
+ */
+window.eventListRef = function() {
+    return database.ref('/eventList');
+};
+
+/**
+ * 현재 행사의 하위 경로 참조
+ * /events/{currentEventId}/{subPath}
+ */
+window.eventRef = function(subPath) {
+    const eventId = AppConfig.currentEventId;
+    if (!eventId) {
+        console.warn('eventRef: currentEventId 없음');
+        return null;
+    }
+    return subPath
+        ? database.ref(`/events/${eventId}/${subPath}`)
+        : database.ref(`/events/${eventId}`);
+};
+
+/**
+ * 현재 행사의 경로 문자열 반환
+ * /events/{currentEventId}/{subPath}
+ */
+window.eventPath = function(subPath) {
+    const eventId = AppConfig.currentEventId;
+    if (!eventId) return null;
+    return subPath
+        ? `/events/${eventId}/${subPath}`
+        : `/events/${eventId}`;
+};
+
+// ============================================
 // 행사 로비 UI
 // ============================================
 

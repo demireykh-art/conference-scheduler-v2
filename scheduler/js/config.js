@@ -34,14 +34,14 @@ console.log('🔥 Firebase 초기화 완료');
     // 기본 설정
     // ============================================
     
-    window.AppConfig = window.AppConfig || {
-        TIME_SETTINGS: {
-            start: '08:30',
-            end: '18:00',
-            interval: 5
-        },
-        ROOMS_BY_DATE: {}
-    };
+    window.AppConfig = window.AppConfig || {};
+
+    // 필수 초기값 보장 (누락 방지)
+    AppConfig.currentEventId   = AppConfig.currentEventId   || localStorage.getItem('lastSelectedEventId') || null;
+    AppConfig.SESSION_TIMEOUT  = AppConfig.SESSION_TIMEOUT  || (24 * 60 * 60 * 1000); // 24시간
+    AppConfig.ROOMS_BY_DATE    = AppConfig.ROOMS_BY_DATE    || {};
+    AppConfig.TIME_SETTINGS    = AppConfig.TIME_SETTINGS    || { start: '08:30', end: '18:00', interval: 5 };
+    AppConfig.SUPER_ADMIN_EMAIL = AppConfig.SUPER_ADMIN_EMAIL || '';
     
     // ============================================
     // 시간 설정 모달
