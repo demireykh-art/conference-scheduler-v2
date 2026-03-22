@@ -23,8 +23,8 @@
                 </div>
                 <div class="modal-body">
                     <div id="uploadDropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:40px;text-align:center;cursor:pointer;margin-bottom:16px;">
-                        <p style="font-size:1.1rem;color:#64748b;">📁 JSON 파일을 드래그하거나 클릭하여 선택</p>
-                        <input type="file" id="uploadFileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
+                        <p style="font-size:1.1rem;color:#64748b;">📁 Excel/CSV 파일을 드래그하거나 클릭하여 선택</p>
+                        <input type="file" id="uploadFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFileSelect(event)">
                         <button class="btn btn-secondary" onclick="document.getElementById('uploadFileInput').click()">파일 선택</button>
                     </div>
                     <div id="uploadPreview"></div>
