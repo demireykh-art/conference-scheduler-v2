@@ -113,7 +113,7 @@ window.DEFAULT_BREAK_ITEMS = [
         speakerKo: '',
         speakerEn: '',
         affiliation: '',
-        category: 'Opening/Closing',
+        category: 'Opening-Closing',
         duration: 30,
         isBreak: true
     },

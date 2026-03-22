@@ -54,7 +54,7 @@ console.log('🔥 Firebase 초기화 완료');
         'Coffee Break':     '#9ca3af',
         'Lunch':            '#6b7280',
         'Panel Discussion': '#d61f69',
-        'Opening/Closing':  '#1c64f2',
+        'Opening-Closing':  '#1c64f2',
         'Free Paper':       '#0e9f6e',
         'Video Session':    '#ff5a1f',
         'Sponsored':        '#f59e0b',
@@ -63,7 +63,7 @@ console.log('🔥 Firebase 초기화 완료');
 
     AppConfig.DEFAULT_CATEGORY_GROUPS = AppConfig.DEFAULT_CATEGORY_GROUPS || {
         '세션': ['Plenary', 'Symposium', 'Workshop', 'Hands-on', 'Free Paper', 'Video Session', 'Panel Discussion'],
-        '행사': ['Opening/Closing', 'Luncheon', 'Sponsored'],
+        '행사': ['Opening-Closing', 'Luncheon', 'Sponsored'],
         '휴식': ['Coffee Break', 'Lunch'],
         '기타': ['General']
     };

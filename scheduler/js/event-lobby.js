@@ -239,15 +239,38 @@ window.saveNewEvent = async function() {
     
     // 행사 ID 생성
     const eventId = 'event_' + Date.now();
-    
+
+    // categoryColors — Firebase 키에 / # $ . [ ] 불가이므로 직접 정의
+    const safeCategoryColors = {
+        'Plenary':          '#1a56db',
+        'Symposium':        '#7e3af2',
+        'Workshop':         '#057a55',
+        'Hands-on':         '#0694a2',
+        'Luncheon':         '#e3a008',
+        'Coffee Break':     '#9ca3af',
+        'Lunch':            '#6b7280',
+        'Panel Discussion': '#d61f69',
+        'Opening-Closing':  '#1c64f2',
+        'Free Paper':       '#0e9f6e',
+        'Video Session':    '#ff5a1f',
+        'Sponsored':        '#f59e0b',
+        'General':          '#6366f1'
+    };
+    const safeCategoryGroups = {
+        '세션': ['Plenary', 'Symposium', 'Workshop', 'Hands-on', 'Free Paper', 'Video Session', 'Panel Discussion'],
+        '행사': ['Opening-Closing', 'Luncheon', 'Sponsored'],
+        '휴식': ['Coffee Break', 'Lunch'],
+        '기타': ['General']
+    };
+
     // 행사 데이터 구성
     const eventData = {
         name: name,
         dates: dates,
         roomsByDate: roomsByDate,
         timeSettings: timeSettings,
-        categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS || {},
-        categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS || {},
+        categoryGroups: safeCategoryGroups,
+        categoryColors: safeCategoryColors,
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         createdBy: AppState.currentUser?.email || 'unknown',
         members: {
@@ -270,14 +293,14 @@ window.saveNewEvent = async function() {
                 dataByDate: emptyDataByDate,
                 speakers: [],
                 companies: [],
-                categories: AppConfig.DEFAULT_CATEGORY_COLORS ? Object.keys(AppConfig.DEFAULT_CATEGORY_COLORS) : []
+                categories: Object.keys(safeCategoryColors)
             },
             settings: {
                 dates: dates,
                 roomsByDate: roomsByDate,
                 timeSettings: timeSettings,
-                categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS || {},
-                categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS || {}
+                categoryGroups: safeCategoryGroups,
+                categoryColors: safeCategoryColors
             }
         });
         

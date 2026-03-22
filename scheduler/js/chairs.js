@@ -8,7 +8,7 @@
  */
 window.getExpertiseTags = function() {
     // Break 타입 (전문분야에서 제외)
-    const excludeTypes = (AppConfig && AppConfig.BREAK_TYPES) ? AppConfig.BREAK_TYPES : ['Coffee Break', 'Lunch', 'Opening/Closing', 'Panel Discussion'];
+    const excludeTypes = (AppConfig && AppConfig.BREAK_TYPES) ? AppConfig.BREAK_TYPES : ['Coffee Break', 'Lunch', 'Opening-Closing', 'Panel Discussion'];
     // 추가로 제외할 타입
     const additionalExclude = ['Luncheon', 'Others', 'Other Solutions'];
     const allExclude = [...excludeTypes, ...additionalExclude];

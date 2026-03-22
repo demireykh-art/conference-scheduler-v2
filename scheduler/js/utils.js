@@ -230,7 +230,7 @@
      * Break 타입인지 확인
      */
     window.isBreakType = function(category) {
-        const breakTypes = AppConfig.BREAK_TYPES || ['Coffee Break', 'Lunch', 'Opening/Closing', 'Panel Discussion'];
+        const breakTypes = AppConfig.BREAK_TYPES || ['Coffee Break', 'Lunch', 'Opening-Closing', 'Panel Discussion'];
         return breakTypes.includes(category);
     };
 
