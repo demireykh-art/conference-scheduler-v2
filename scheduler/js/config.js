@@ -42,6 +42,35 @@ console.log('🔥 Firebase 초기화 완료');
     AppConfig.ROOMS_BY_DATE    = AppConfig.ROOMS_BY_DATE    || {};
     AppConfig.TIME_SETTINGS    = AppConfig.TIME_SETTINGS    || { start: '08:30', end: '18:00', interval: 5 };
     AppConfig.SUPER_ADMIN_EMAIL = AppConfig.SUPER_ADMIN_EMAIL || '';
+    AppConfig.SPEAKER_TRANSFER_TIME = AppConfig.SPEAKER_TRANSFER_TIME || 10; // 연자 이동시간(분)
+
+    // 카테고리 기본값 — 어디에도 정의 없으면 여기서 생성
+    AppConfig.DEFAULT_CATEGORY_COLORS = AppConfig.DEFAULT_CATEGORY_COLORS || {
+        'Plenary':          '#1a56db',
+        'Symposium':        '#7e3af2',
+        'Workshop':         '#057a55',
+        'Hands-on':         '#0694a2',
+        'Luncheon':         '#e3a008',
+        'Coffee Break':     '#9ca3af',
+        'Lunch':            '#6b7280',
+        'Panel Discussion': '#d61f69',
+        'Opening/Closing':  '#1c64f2',
+        'Free Paper':       '#0e9f6e',
+        'Video Session':    '#ff5a1f',
+        'Sponsored':        '#f59e0b',
+        'General':          '#6366f1'
+    };
+
+    AppConfig.DEFAULT_CATEGORY_GROUPS = AppConfig.DEFAULT_CATEGORY_GROUPS || {
+        '세션': ['Plenary', 'Symposium', 'Workshop', 'Hands-on', 'Free Paper', 'Video Session', 'Panel Discussion'],
+        '행사': ['Opening/Closing', 'Luncheon', 'Sponsored'],
+        '휴식': ['Coffee Break', 'Lunch'],
+        '기타': ['General']
+    };
+
+    // categoryColors / categoryGroups 초기화 (행사 미선택 시 기본값 사용)
+    if (!AppConfig.categoryColors) AppConfig.categoryColors = AppConfig.DEFAULT_CATEGORY_COLORS;
+    if (!AppConfig.categoryGroups) AppConfig.categoryGroups = AppConfig.DEFAULT_CATEGORY_GROUPS;
     
     // ============================================
     // 시간 설정 모달

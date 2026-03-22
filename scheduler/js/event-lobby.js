@@ -246,8 +246,8 @@ window.saveNewEvent = async function() {
         dates: dates,
         roomsByDate: roomsByDate,
         timeSettings: timeSettings,
-        categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS,
-        categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS,
+        categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS || {},
+        categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS || {},
         createdAt: firebase.database.ServerValue.TIMESTAMP,
         createdBy: AppState.currentUser?.email || 'unknown',
         members: {
@@ -270,14 +270,14 @@ window.saveNewEvent = async function() {
                 dataByDate: emptyDataByDate,
                 speakers: [],
                 companies: [],
-                categories: Object.keys(AppConfig.DEFAULT_CATEGORY_COLORS)
+                categories: AppConfig.DEFAULT_CATEGORY_COLORS ? Object.keys(AppConfig.DEFAULT_CATEGORY_COLORS) : []
             },
             settings: {
                 dates: dates,
                 roomsByDate: roomsByDate,
                 timeSettings: timeSettings,
-                categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS,
-                categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS
+                categoryGroups: AppConfig.DEFAULT_CATEGORY_GROUPS || {},
+                categoryColors: AppConfig.DEFAULT_CATEGORY_COLORS || {}
             }
         });
         
