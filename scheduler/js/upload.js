@@ -22,6 +22,14 @@
                     <button class="btn btn-secondary btn-small" onclick="closeUploadModal()">✕</button>
                 </div>
                 <div class="modal-body">
+                    <!-- 날짜 선택 -->
+                    <div style="margin-bottom:16px;">
+                        <label style="font-weight:600;display:block;margin-bottom:6px;">📅 업로드할 날짜 선택 <span style="color:#ef4444;">*</span></label>
+                        <select id="uploadTargetDate" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:1rem;">
+                            <option value="">-- 날짜를 선택하세요 --</option>
+                        </select>
+                    </div>
+
                     <!-- 드롭존 -->
                     <div id="dropZone" style="border:2px dashed #cbd5e1;border-radius:8px;padding:32px;text-align:center;cursor:pointer;margin-bottom:16px;transition:background 0.2s;">
                         <p style="font-size:1.05rem;color:#64748b;margin:0 0 12px;">📁 Excel/CSV 파일을 드래그하거나 클릭하여 선택</p>
@@ -83,6 +91,32 @@
         modal.classList.add('active');
         clearUploadPreview();
         setupDropZone();
+
+        // 날짜 드롭다운 채우기
+        const dateSelect = document.getElementById('uploadTargetDate');
+        if (dateSelect) {
+            dateSelect.innerHTML = '<option value="">-- 날짜를 선택하세요 --</option>';
+            const dates = AppConfig?.CONFERENCE_DATES || AppState?.eventDates || [];
+            if (dates.length > 0) {
+                dates.forEach(d => {
+                    const dateVal = typeof d === 'object' ? d.date : d;
+                    const dateLabel = typeof d === 'object' ? (d.label || d.date) : d;
+                    const opt = document.createElement('option');
+                    opt.value = dateVal;
+                    opt.textContent = dateLabel;
+                    // 현재 선택된 날짜를 기본값으로
+                    if (dateVal === AppState.currentDate) opt.selected = true;
+                    dateSelect.appendChild(opt);
+                });
+            } else {
+                // 날짜가 없으면 현재 날짜만
+                const opt = document.createElement('option');
+                opt.value = AppState.currentDate || '';
+                opt.textContent = AppState.currentDate || '현재 날짜';
+                opt.selected = true;
+                dateSelect.appendChild(opt);
+            }
+        }
     }
     
     function closeUploadModal() {
@@ -415,6 +449,10 @@
                 <td style="padding: 0.4rem;">${lecture.duration}분</td>
             </tr>
         `}).join('');
+
+        // ★ 파싱 완료 후 업로드 확인 버튼 활성화
+        const confirmBtn = document.getElementById('confirmUploadBtn');
+        if (confirmBtn) confirmBtn.disabled = false;
     }
     
     // ============================================
@@ -426,9 +464,21 @@
             Toast.warning('업로드할 데이터가 없습니다.');
             return;
         }
-        
+
+        // 날짜 선택 확인
+        const targetDate = document.getElementById('uploadTargetDate')?.value || AppState.currentDate;
+        if (!targetDate) {
+            Toast.warning('업로드할 날짜를 선택해주세요.');
+            return;
+        }
+
         const replaceAllMode = document.getElementById('replaceAllMode')?.checked || false;
-        
+
+        // 선택한 날짜로 전환
+        if (targetDate !== AppState.currentDate && typeof switchDate === 'function') {
+            await switchDate(targetDate);
+        }
+
         const lectures = window.AppState.lectures;
         const dataByDate = window.AppState.dataByDate;
         const speakers = window.AppState.speakers;
@@ -619,12 +669,23 @@
             const sanitizedCompanies = sanitizeForFirebase(window.AppState.companies);
             const sanitizedCategories = sanitizeForFirebase(window.AppState.categories);
             
-            await firebase.database().ref('/data/dataByDate').set(sanitizedDataByDate);
-            await firebase.database().ref('/data/speakers').set(sanitizedSpeakers);
-            await firebase.database().ref('/data/companies').set(sanitizedCompanies);
-            await firebase.database().ref('/data/categories').set(sanitizedCategories);
-            await firebase.database().ref('/data/lastModified').set(firebase.database.ServerValue.TIMESTAMP);
-            await firebase.database().ref('/data/lastModifiedBy').set(window.AppState.currentUser ? window.AppState.currentUser.email : 'unknown');
+            // V2: eventRef() 사용 (없으면 직접 경로 구성)
+            const getRef = (path) => {
+                if (typeof eventRef === 'function') {
+                    const r = eventRef(path);
+                    if (r) return r;
+                }
+                const eventId = AppConfig?.currentEventId;
+                if (eventId) return firebase.database().ref(`/events/${eventId}/${path}`);
+                return firebase.database().ref(`/data/${path}`); // fallback
+            };
+
+            await getRef('data/dataByDate').set(sanitizedDataByDate);
+            await getRef('data/speakers').set(sanitizedSpeakers);
+            await getRef('data/companies').set(sanitizedCompanies);
+            await getRef('data/categories').set(sanitizedCategories);
+            await getRef('data/lastModified').set(firebase.database.ServerValue.TIMESTAMP);
+            await getRef('data/lastModifiedBy').set(window.AppState.currentUser?.email || 'unknown');
             
             console.log('✅ Firebase 저장 완료');
             
